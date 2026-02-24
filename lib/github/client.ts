@@ -114,12 +114,15 @@ export async function getRepoIssues(
       per_page: 20,
     });
 
-    return data.map((issue) => ({
-      number: issue.number,
-      title: issue.title,
-      body: issue.body,
-      labels: issue.labels.map((l: any) => l.name),
-    }));
+    return data
+      .filter((issue) => !issue.pull_request) // Exclude PRs
+      .map((issue) => ({
+        title: issue.title,
+        body: issue.body || null,
+        labels: Array.isArray(issue.labels)
+          ? issue.labels.map((l: any) => (typeof l === "string" ? l : l.name))
+          : [],
+      }));
   } catch (error) {
     console.error("Failed to fetch issues:", error);
     return [];
