@@ -11,6 +11,7 @@ import {
   generateRoadmapWithRetry,
   type GeneratedTask,
 } from "@/lib/ai/roadmap";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
 // POST /api/repos/:id/roadmap - Generate roadmap for a repo
 export async function POST(
@@ -22,6 +23,25 @@ export async function POST(
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Check rate limit (3 per hour per user)
+    const rateLimitKey = `roadmap:${session.user.id}`;
+    const rateLimit = checkRateLimit(rateLimitKey, RATE_LIMITS.ROADMAP_GEN);
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        {
+          error: "Rate limit exceeded. Max 3 roadmap generations per hour.",
+          retryAfter: rateLimit.retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(rateLimit.retryAfter),
+          },
+        }
+      );
     }
 
     // Get repo from database
