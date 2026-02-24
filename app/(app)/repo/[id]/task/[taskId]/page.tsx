@@ -1,8 +1,8 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { CheckInForm } from "@/components/app/CheckInForm";
+import { MarkTaskDoneButton } from "@/components/app/MarkTaskDoneButton";
 import Link from "next/link";
 
 export default async function TaskDetailPage({
@@ -158,12 +158,14 @@ export default async function TaskDetailPage({
 
         {/* Mark Done Button */}
         {task.status !== "DONE" && (
-          <div className="flex gap-3">
-            <Link href={`/repo/${repoId}`} className="flex-1">
-              <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-lg py-6">
-                ✓ Mark Done
-              </Button>
-            </Link>
+          <MarkTaskDoneButton taskId={taskId} repoId={repoId} />
+        )}
+
+        {task.status === "DONE" && (
+          <div className="rounded-lg backdrop-blur-md bg-emerald-600/10 border border-emerald-500/30 p-6 text-center">
+            <p className="text-emerald-400 font-semibold text-lg">
+              ✓ Task completed! Great work shipping this feature.
+            </p>
           </div>
         )}
       </main>
