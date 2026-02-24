@@ -1,0 +1,114 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  githubId      String    @unique
+  email         String?
+  name          String?
+  avatar        String?
+  plan          Plan      @default(FREE)
+  createdAt     DateTime  @default(now())
+  repos         Repo[]
+  checkIns      CheckIn[]
+}
+
+model Repo {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  githubRepoId  Int       @unique
+  name          String
+  fullName      String
+  url           String
+  defaultBranch String    @default("main")
+  connectedAt   DateTime  @default(now())
+  roadmapGenAt  DateTime?
+  tasks         Task[]
+  checkIns      CheckIn[]
+  dailyTasks    DailyTask[]
+
+  @@index([userId])
+}
+
+model Task {
+  id            String      @id @default(cuid())
+  repoId        String
+  repo          Repo        @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  title         String
+  description   String
+  estimate      Int         // minutes: 30 or 60
+  difficulty    Int         // 1-5
+  priority      Int         // 1-10
+  status        TaskStatus  @default(TODO)
+  files         String[]    // JSON array of file paths
+  microSteps    String[]    // JSON array of 3-5 steps
+  createdAt     DateTime    @default(now())
+  completedAt   DateTime?
+  history       TaskHistory[]
+  dailyTasks    DailyTask[]
+
+  @@index([repoId])
+  @@index([status])
+}
+
+model CheckIn {
+  id            String    @id @default(cuid())
+  repoId        String
+  repo          Repo      @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  summary       String
+  diffSnippet   String?
+  aiCoaching    String
+  createdAt     DateTime  @default(now())
+
+  @@index([repoId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model TaskHistory {
+  id            String    @id @default(cuid())
+  taskId        String
+  task          Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  completedAt   DateTime  @default(now())
+  sessionNotes  String?
+
+  @@index([taskId])
+}
+
+model DailyTask {
+  id            String    @id @default(cuid())
+  repoId        String
+  repo          Repo      @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  taskId        String
+  task          Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  date          DateTime  @default(now())
+  reasoning     String
+
+  @@unique([repoId, date])
+  @@index([date])
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  SKIPPED
+}
+
+enum Plan {
+  FREE
+  PRO
+}
