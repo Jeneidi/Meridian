@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { TodaysTaskSection } from "@/components/app/TodaysTaskSection";
 import Link from "next/link";
 
 export default async function DashboardPage() {
@@ -52,12 +53,16 @@ export default async function DashboardPage() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* Today's Task Placeholder */}
+            {/* Today's Task */}
             <div>
               <h2 className="text-2xl font-bold text-white mb-4">Today's Task</h2>
-              <div className="rounded-lg backdrop-blur-md bg-white/5 border border-white/10 p-8 text-center text-slate-400">
-                Coming in M5 — Daily task selection & push notification
-              </div>
+              {repos.length > 0 && repos[0].tasks.length > 0 ? (
+                <TodaysTaskSection repoId={repos[0].id} />
+              ) : (
+                <div className="rounded-lg backdrop-blur-md bg-white/5 border border-white/10 p-8 text-center text-slate-400">
+                  Generate a roadmap to see today's task
+                </div>
+              )}
             </div>
 
             {/* Connected Repos */}
