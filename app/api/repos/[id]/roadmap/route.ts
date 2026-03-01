@@ -12,6 +12,9 @@ import {
   type GeneratedTask,
 } from "@/lib/ai/roadmap";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+import { getUserPlan } from "@/lib/plan-gate";
+
+export const runtime = "nodejs";
 
 // POST /api/repos/:id/roadmap - Generate roadmap for a repo
 export async function POST(
@@ -25,14 +28,32 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check rate limit (3 per hour per user)
-    const rateLimitKey = `roadmap:${session.user.id}`;
-    const rateLimit = checkRateLimit(rateLimitKey, RATE_LIMITS.ROADMAP_GEN);
+    // Get user's plan and apply appropriate rate limit
+    const userId = session.user.id as string;
+    const plan = await getUserPlan(userId);
+    const rateLimitKey = `roadmap:${userId}`;
+
+    const rateLimitConfig =
+      plan === "PREMIUM"
+        ? RATE_LIMITS.ROADMAP_PREMIUM
+        : plan === "PRO"
+          ? RATE_LIMITS.ROADMAP_PRO
+          : RATE_LIMITS.ROADMAP_FREE;
+
+    const rateLimit = checkRateLimit(rateLimitKey, rateLimitConfig);
 
     if (!rateLimit.success) {
+      const limits: Record<string, number> = {
+        FREE: 2,
+        PRO: 10,
+        PREMIUM: 50,
+      };
+      const limit = limits[plan];
+      const window = plan === "FREE" ? "per month" : "per day";
+
       return NextResponse.json(
         {
-          error: "Rate limit exceeded. Max 3 roadmap generations per hour.",
+          error: `Rate limit exceeded. Max ${limit} roadmap generations ${window}.`,
           retryAfter: rateLimit.retryAfter,
         },
         {
@@ -78,12 +99,22 @@ export async function POST(
     ]);
 
     // Generate roadmap using Claude
-    const tasks = await generateRoadmapWithRetry({
+    console.log("🔧 Calling generateRoadmapWithRetry for repo:", repo.name);
+    console.log("   README length:", readme?.length || 0);
+    console.log("   Files count:", fileTree?.length || 0);
+    console.log("   Issues count:", issues?.length || 0);
+    const { tasks, metadata, message } = await generateRoadmapWithRetry({
       repoName: repo.name,
       readme,
       fileTree,
       issues,
     });
+    console.log("✅ Roadmap generation succeeded, tasks:", tasks.length);
+    console.log("📊 Project analysis - Type:", metadata.projectType, "| Complexity:", metadata.complexity);
+    console.log("   Docs needed - README:", metadata.documentationNeeds.needsFullReadme,
+      "| Setup guide:", metadata.documentationNeeds.needsComprehensiveSetupGuide,
+      "| Repro steps:", metadata.documentationNeeds.needsReproductionSteps,
+      "| Verification:", metadata.documentationNeeds.needsExtensiveVerification);
 
     // Delete existing tasks for this repo (if re-generating)
     await prisma.task.deleteMany({
@@ -91,6 +122,7 @@ export async function POST(
     });
 
     // Store tasks in database
+    // Note: Prisma stores files and microSteps as JSON strings in SQLite
     const createdTasks = await Promise.all(
       tasks.map((task) =>
         prisma.task.create({
@@ -101,8 +133,8 @@ export async function POST(
             estimate: task.estimate,
             difficulty: task.difficulty,
             priority: task.priority,
-            files: task.files,
-            microSteps: task.microSteps,
+            files: JSON.stringify(Array.isArray(task.files) ? task.files : []),
+            microSteps: JSON.stringify(Array.isArray(task.microSteps) ? task.microSteps : []),
           },
         })
       )
@@ -118,6 +150,12 @@ export async function POST(
       {
         success: true,
         taskCount: createdTasks.length,
+        message: message || null,
+        projectAnalysis: {
+          projectType: metadata.projectType,
+          complexity: metadata.complexity,
+          documentationNeeds: metadata.documentationNeeds,
+        },
         tasks: createdTasks.map((task) => ({
           id: task.id,
           title: task.title,
@@ -129,10 +167,16 @@ export async function POST(
       { status: 201 }
     );
   } catch (error) {
-    console.error("POST /api/repos/:id/roadmap error:", error);
+    console.error("❌ POST /api/repos/:id/roadmap error:", error);
+    console.error("   Error type:", error instanceof Error ? error.constructor.name : typeof error);
+    if (error instanceof Error) {
+      console.error("   Error message:", error.message);
+      console.error("   Stack trace:", error.stack);
+    }
 
     const message =
       error instanceof Error ? error.message : "Failed to generate roadmap";
+    console.log("📤 Returning error to client:", message);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

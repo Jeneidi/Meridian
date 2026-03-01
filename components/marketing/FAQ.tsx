@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 
 export function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -65,13 +66,12 @@ export function FAQ() {
                 className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-white/5 transition"
               >
                 <h3 className="font-semibold text-white">{faq.question}</h3>
-                <span
-                  className={`text-slate-400 transition-transform ${
+                <ChevronDown
+                  className={`w-5 h-5 text-indigo-400 transition-transform flex-shrink-0 ${
                     openIndex === index ? "rotate-180" : ""
                   }`}
-                >
-                  ▼
-                </span>
+                  strokeWidth={2}
+                />
               </button>
 
               {openIndex === index && (
@@ -83,18 +83,6 @@ export function FAQ() {
           ))}
         </div>
 
-        {/* CTA */}
-        <div className="mt-12 text-center space-y-4">
-          <p className="text-slate-400">
-            More questions?{" "}
-            <a
-              href="mailto:support@meridian.sh"
-              className="text-indigo-400 hover:text-indigo-300 font-semibold transition"
-            >
-              Ask us
-            </a>
-          </p>
-        </div>
       </div>
     </section>
   );

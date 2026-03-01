@@ -15,12 +15,15 @@ export interface CoachingInput {
  * Generate AI coaching response after a work session
  * Focus on momentum, scope clarity, and next steps (not code review)
  */
-export async function generateCoaching(input: CoachingInput): Promise<string> {
+export async function generateCoaching(
+  input: CoachingInput,
+  model: string = "claude-sonnet-4-6"
+): Promise<string> {
   const prompt = buildCoachingPrompt(input);
 
   try {
     const message = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model,
       max_tokens: 512,
       messages: [
         {
@@ -84,13 +87,14 @@ Give brief, honest coaching feedback on this session. Did they make progress tow
  */
 export async function generateCoachingWithRetry(
   input: CoachingInput,
-  maxRetries: number = 2
+  maxRetries: number = 2,
+  model: string = "claude-sonnet-4-6"
 ): Promise<string> {
   let lastError: Error | null = null;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      return await generateCoaching(input);
+      return await generateCoaching(input, model);
     } catch (error) {
       lastError = error as Error;
       console.warn(

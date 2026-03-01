@@ -69,16 +69,55 @@ export function checkRateLimit(
  * Common rate limit configs
  */
 export const RATE_LIMITS = {
-  // Roadmap generation: 3 per hour per user
+  // Legacy: kept for backward compatibility
   ROADMAP_GEN: {
     windowMs: 60 * 60 * 1000,
     max: 3,
   },
-  // Checkin: 10 per day per user
   CHECKIN: {
     windowMs: 24 * 60 * 60 * 1000,
     max: 10,
   },
+
+  // Plan-aware roadmap limits
+  ROADMAP_FREE: {
+    windowMs: 30 * 24 * 60 * 60 * 1000, // 30 days
+    max: 2,
+  },
+  ROADMAP_PRO: {
+    windowMs: 24 * 60 * 60 * 1000, // 1 day
+    max: 10,
+  },
+  ROADMAP_PREMIUM: {
+    windowMs: 24 * 60 * 60 * 1000, // 1 day
+    max: 50,
+  },
+
+  // Plan-aware checkin limits
+  CHECKIN_FREE: {
+    windowMs: 24 * 60 * 60 * 1000, // 1 day
+    max: 2,
+  },
+  CHECKIN_PRO: {
+    windowMs: 24 * 60 * 60 * 1000, // 1 day
+    max: 10,
+  },
+  CHECKIN_PREMIUM: {
+    windowMs: 24 * 60 * 60 * 1000, // 1 day
+    max: 30,
+  },
+
+  // Security audit limits
+  AUDIT_PRO: {
+    windowMs: 24 * 60 * 60 * 1000, // 1 day
+    max: 3,
+  },
+  AUDIT_PREMIUM: {
+    windowMs: 24 * 60 * 60 * 1000, // 1 day
+    max: 10,
+  },
+  // FREE has no audit constant — deep audit is hard-blocked for FREE
+
   // Generic API: 60 per minute per IP
   API_GENERAL: {
     windowMs: 60 * 1000,

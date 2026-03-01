@@ -6,21 +6,64 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model User {
-  id            String    @id @default(cuid())
-  githubId      String    @unique
-  email         String?
-  name          String?
-  avatar        String?
-  plan          Plan      @default(FREE)
-  createdAt     DateTime  @default(now())
-  repos         Repo[]
-  checkIns      CheckIn[]
+  id                   String    @id @default(cuid())
+  name                 String?
+  email                String?   @unique
+  emailVerified        DateTime?
+  image                String?
+  githubId             String?   @unique
+  plan                 Plan      @default(FREE)
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?
+  createdAt            DateTime  @default(now())
+
+  accounts         Account[]
+  sessions         Session[]
+  repos            Repo[]
+  checkIns         CheckIn[]
+  sentInvites      TeamInvite[]   @relation("SentInvites")
+  receivedInvites  TeamInvite[]   @relation("ReceivedInvites")
+  notifications    Notification[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 model Repo {
@@ -37,6 +80,7 @@ model Repo {
   tasks         Task[]
   checkIns      CheckIn[]
   dailyTasks    DailyTask[]
+  invites       TeamInvite[]
 
   @@index([userId])
 }
@@ -51,8 +95,8 @@ model Task {
   difficulty    Int         // 1-5
   priority      Int         // 1-10
   status        TaskStatus  @default(TODO)
-  files         String[]    // JSON array of file paths
-  microSteps    String[]    // JSON array of 3-5 steps
+  files         String      @default("[]") // JSON array of file paths
+  microSteps    String      @default("[]") // JSON array of 3-5 steps
   createdAt     DateTime    @default(now())
   completedAt   DateTime?
   history       TaskHistory[]
@@ -111,4 +155,40 @@ enum TaskStatus {
 enum Plan {
   FREE
   PRO
+  PREMIUM
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model TeamInvite {
+  id          String       @id @default(cuid())
+  repoId      String
+  repo        Repo         @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  inviterId   String
+  inviter     User         @relation("SentInvites", fields: [inviterId], references: [id], onDelete: Cascade)
+  inviteeId   String
+  invitee     User         @relation("ReceivedInvites", fields: [inviteeId], references: [id], onDelete: Cascade)
+  status      InviteStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+  respondedAt DateTime?
+
+  @@unique([repoId, inviteeId])
+  @@index([inviteeId, status])
+  @@index([inviterId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  inviteId  String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
 }

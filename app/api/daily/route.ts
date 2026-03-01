@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { selectDailyTask, getTodaysTask } from "@/lib/ai/daily-task";
 
+export const runtime = "nodejs";
+
 // GET /api/daily?repoId=... - Get today's selected task
 export async function GET(req: NextRequest) {
   try {

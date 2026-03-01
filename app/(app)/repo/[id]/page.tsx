@@ -2,7 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/app/PageHeader";
+import { Shield, Loader2 } from "lucide-react";
+import { formatEstimate } from "@/lib/format";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { AddCustomTaskDialog } from "@/components/app/AddCustomTaskDialog";
+import { InviteContributorPanel } from "@/components/app/InviteContributorPanel";
 
 interface RepoDetail {
   id: string;
@@ -32,6 +38,7 @@ export default function RepoDetailPage() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRepo();
@@ -57,21 +64,22 @@ export default function RepoDetailPage() {
     try {
       setGenerating(true);
       setError(null);
+      setMessage(null);
 
       const response = await fetch(`/api/repos/${repoId}/roadmap`, {
         method: "POST",
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to generate roadmap");
+        const error = await response.json();
+        throw new Error(error.error || "Failed to generate roadmap");
       }
 
       const data = await response.json();
       setTasks(data.tasks || []);
-
-      // Refresh repo data to show updated timestamp
-      await fetchRepo();
+      if (data.message) {
+        setMessage(data.message);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -81,57 +89,62 @@ export default function RepoDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <p className="text-slate-300">Loading repo...</p>
+      <div className="min-h-screen bg-[#09090b] flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-indigo-400" />
+          <p className="text-zinc-400">Loading repository...</p>
+        </div>
       </div>
     );
   }
 
   if (!repo) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#09090b] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-slate-300 mb-4">Repo not found</p>
-          <Button onClick={() => router.push("/dashboard")}>Back to Dashboard</Button>
+          <h1 className="text-2xl font-bold text-white mb-2">Repository Not Found</h1>
+          <p className="text-zinc-400 mb-6">The repository you're looking for doesn't exist or you don't have access to it.</p>
+          <Link href="/dashboard" className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors inline-flex items-center justify-center">
+            Back to Dashboard
+          </Link>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Header */}
-      <header className="border-b border-white/10 bg-white/5 backdrop-blur-sm sticky top-0">
-        <div className="px-8 py-6">
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="text-indigo-400 hover:text-indigo-300 text-sm mb-3"
-          >
-            ← Back
-          </button>
-          <h1 className="text-3xl font-bold text-white">{repo.name}</h1>
-          <p className="text-slate-400 mt-1">{repo.fullName}</p>
-        </div>
-      </header>
+  const fadeUp = {
+    hidden: { opacity: 0, y: 12 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.28, ease: [0.25, 0.1, 0.25, 1] as const } }
+  };
 
-      <main className="max-w-4xl mx-auto px-8 py-12">
+  return (
+    <div className="min-h-screen bg-[#09090b]">
+      <PageHeader title={repo.name} backHref="/dashboard" />
+
+      <main className="max-w-7xl mx-auto px-8 py-12">
+        <p className="text-zinc-500 text-sm mb-8">{repo.fullName}</p>
         {error && (
-          <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20">
-            <p className="text-red-300">{error}</p>
+          <div className="mb-6 p-4 rounded-lg bg-red-950/50 border border-red-900">
+            <p className="text-red-400">{error}</p>
+          </div>
+        )}
+        {message && (
+          <div className="mb-6 p-4 rounded-lg bg-emerald-950/50 border border-emerald-900">
+            <p className="text-emerald-400">{message}</p>
           </div>
         )}
 
         {/* Repo Info */}
-        <div className="rounded-lg backdrop-blur-md bg-white/5 border border-white/10 p-8 mb-8">
+        <div className="rounded-lg bg-zinc-900 border border-zinc-800 p-8 mb-8">
           <div className="grid grid-cols-2 gap-8 mb-8">
             <div>
-              <p className="text-slate-400 text-sm">Connected</p>
+              <p className="text-zinc-500 text-sm">Connected</p>
               <p className="text-white">
                 {new Date(repo.connectedAt).toLocaleDateString()}
               </p>
             </div>
             <div>
-              <p className="text-slate-400 text-sm">Roadmap Generated</p>
+              <p className="text-zinc-500 text-sm">Roadmap Generated</p>
               <p className="text-white">
                 {repo.roadmapGenAt
                   ? new Date(repo.roadmapGenAt).toLocaleDateString()
@@ -142,65 +155,91 @@ export default function RepoDetailPage() {
 
           {tasks.length === 0 ? (
             <>
-              <p className="text-slate-300 mb-6">
+              <p className="text-zinc-300 mb-6">
                 No roadmap generated yet. Click the button below to generate a
                 shipping roadmap from your repo.
               </p>
-              <button
-                onClick={handleGenerateRoadmap}
-                disabled={generating}
-                className="px-6 py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 disabled:opacity-50"
-              >
-                {generating ? "Generating Roadmap..." : "Generate Roadmap"}
-              </button>
+              <div className="flex flex-wrap gap-4">
+                <button
+                  onClick={handleGenerateRoadmap}
+                  disabled={generating}
+                  className="px-6 py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2 transition"
+                >
+                  {generating && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {generating ? "Generating Roadmap..." : "Generate Roadmap"}
+                </button>
+                <Link href={`/repo/${repoId}/audit`} className="px-6 py-3 rounded-lg bg-amber-600 text-white font-semibold hover:bg-amber-700 flex items-center gap-2 transition inline-flex">
+                  <Shield className="w-4 h-4" />
+                  Security Audit
+                </Link>
+              </div>
             </>
           ) : (
             <>
-              <p className="text-slate-300 mb-6">
+              <p className="text-zinc-300 mb-6">
                 {tasks.length} tasks in your roadmap
               </p>
-              <button
-                onClick={handleGenerateRoadmap}
-                disabled={generating}
-                className="px-4 py-2 rounded-lg bg-slate-700 text-white text-sm hover:bg-slate-600"
-              >
-                {generating ? "Regenerating..." : "Regenerate Roadmap"}
-              </button>
+              <div className="flex flex-wrap gap-4">
+                <button
+                  onClick={handleGenerateRoadmap}
+                  disabled={generating}
+                  className="px-4 py-2 rounded-lg bg-slate-700 text-white text-sm hover:bg-slate-600 disabled:opacity-50 flex items-center gap-2 transition"
+                >
+                  {generating && <Loader2 className="w-3 h-3 animate-spin" />}
+                  {generating ? "Regenerating..." : "Regenerate Roadmap"}
+                </button>
+                <Link href={`/repo/${repoId}/checkin`} className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700 flex items-center gap-2 transition inline-flex">
+                  📝 Check-in Session
+                </Link>
+                <Link href={`/repo/${repoId}/audit`} className="px-4 py-2 rounded-lg bg-amber-600 text-white text-sm hover:bg-amber-700 flex items-center gap-2 transition inline-flex">
+                  <Shield className="w-3 h-3" />
+                  Security Audit
+                </Link>
+              </div>
             </>
           )}
         </div>
 
+        {/* Invite Contributors */}
+        <InviteContributorPanel repoId={repoId} />
+
         {/* Tasks List */}
         {tasks.length > 0 && (
           <div>
-            <h2 className="text-2xl font-bold text-white mb-6">Tasks</h2>
-            <div className="grid gap-4">
-              {tasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="rounded-lg backdrop-blur-md bg-white/5 border border-white/10 p-6 hover:bg-white/10 transition"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-white">
-                      {task.title}
-                    </h3>
-                    <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full">
-                      {task.estimate}m
-                    </span>
-                  </div>
-                  <div className="flex gap-4 text-sm text-slate-400">
-                    <span>
-                      Difficulty:{" "}
-                      <span className="text-white">{task.difficulty}/5</span>
-                    </span>
-                    <span>
-                      Priority:{" "}
-                      <span className="text-white">{task.priority}/10</span>
-                    </span>
-                  </div>
-                </div>
-              ))}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white">Tasks</h2>
+              <AddCustomTaskDialog repoId={repoId} onTaskAdded={fetchRepo} />
             </div>
+            <motion.div
+              className="grid gap-4"
+              initial="hidden"
+              animate="visible"
+              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }}
+            >
+              {tasks.map((task) => (
+                <motion.div
+                  key={task.id}
+                  variants={fadeUp}
+                  whileHover={{ y: -2 }}
+                >
+                  <Link
+                    href={`/repo/${repoId}/task/${task.id}`}
+                    className="border-b border-zinc-800 py-3.5 px-4 hover:bg-zinc-900/60 flex items-center justify-between group cursor-pointer transition"
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <h3 className="text-sm font-medium text-white group-hover:text-indigo-400 transition truncate">
+                        {task.title}
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-4 ml-4 flex-shrink-0">
+                      <span className="text-xs text-zinc-500 font-mono whitespace-nowrap">
+                        {formatEstimate(task.estimate)}
+                      </span>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.div>
           </div>
         )}
       </main>

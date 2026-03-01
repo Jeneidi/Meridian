@@ -3,7 +3,10 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generateCoachingWithRetry } from "@/lib/ai/coaching";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+import { getUserPlan, PLAN_LIMITS } from "@/lib/plan-gate";
 import { sanitizeInput, sanitizeDiff, containsMaliciousContent } from "@/lib/security";
+
+export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,14 +15,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check rate limit (10 checkins per day per user)
-    const rateLimitKey = `checkin:${session.user.id}`;
-    const rateLimit = checkRateLimit(rateLimitKey, RATE_LIMITS.CHECKIN);
+    // Get user's plan and apply appropriate rate limit
+    const userId = session.user.id as string;
+    const plan = await getUserPlan(userId);
+    const rateLimitKey = `checkin:${userId}`;
+
+    const rateLimitConfig =
+      plan === "PREMIUM"
+        ? RATE_LIMITS.CHECKIN_PREMIUM
+        : plan === "PRO"
+          ? RATE_LIMITS.CHECKIN_PRO
+          : RATE_LIMITS.CHECKIN_FREE;
+
+    const rateLimit = checkRateLimit(rateLimitKey, rateLimitConfig);
 
     if (!rateLimit.success) {
+      const limits: Record<string, number> = {
+        FREE: 2,
+        PRO: 10,
+        PREMIUM: 30,
+      };
+      const limit = limits[plan];
+
       return NextResponse.json(
         {
-          error: "Rate limit exceeded. Max 10 check-ins per day.",
+          error: `Rate limit exceeded. Max ${limit} check-ins per day.`,
           retryAfter: rateLimit.retryAfter,
         },
         {
@@ -71,14 +91,20 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate coaching response with sanitized inputs
-    const coaching = await generateCoachingWithRetry({
-      taskTitle: task.title,
-      taskDescription: task.description,
-      userSummary: sanitizedSummary,
-      diffSnippet: sanitizedDiff || undefined,
-      estimate: task.estimate,
-      difficulty: task.difficulty,
-    });
+    // Use plan-appropriate model (Haiku for FREE, Sonnet for paid)
+    const model = PLAN_LIMITS[plan].coachingModel;
+    const coaching = await generateCoachingWithRetry(
+      {
+        taskTitle: task.title,
+        taskDescription: task.description,
+        userSummary: sanitizedSummary,
+        diffSnippet: sanitizedDiff || undefined,
+        estimate: task.estimate,
+        difficulty: task.difficulty,
+      },
+      2,
+      model
+    );
 
     // Store check-in record with sanitized inputs
     const checkin = await prisma.checkIn.create({

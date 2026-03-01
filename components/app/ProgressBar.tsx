@@ -1,3 +1,5 @@
+import { PartyPopper, Rocket, Zap, Flame } from "lucide-react";
+
 interface ProgressBarProps {
   completedTasks: number;
   totalTasks: number;
@@ -68,20 +70,24 @@ export function ProgressBar({
       {/* Motivational message */}
       <div className="pt-4 border-t border-white/10">
         {progressPercent === 100 ? (
-          <p className="text-sm text-emerald-400 font-semibold">
-            🎉 Roadmap complete! Generate a new one to keep shipping.
+          <p className="text-sm text-emerald-400 font-semibold flex items-center gap-2">
+            <PartyPopper className="w-4 h-4 text-emerald-400 flex-shrink-0" strokeWidth={2} />
+            Roadmap complete! Generate a new one to keep shipping.
           </p>
         ) : progressPercent >= 75 ? (
-          <p className="text-sm text-emerald-400">
-            🚀 Almost done! Keep the momentum going.
+          <p className="text-sm text-emerald-400 flex items-center gap-2">
+            <Rocket className="w-4 h-4 text-emerald-400 flex-shrink-0" strokeWidth={2} />
+            Almost done! Keep the momentum going.
           </p>
         ) : progressPercent >= 50 ? (
-          <p className="text-sm text-indigo-400">
-            ⚡ Halfway there! You're making great progress.
+          <p className="text-sm text-indigo-400 flex items-center gap-2">
+            <Zap className="w-4 h-4 text-indigo-400 flex-shrink-0" strokeWidth={2} />
+            Halfway there! You're making great progress.
           </p>
         ) : streak > 3 ? (
-          <p className="text-sm text-indigo-400">
-            🔥 {streak}-day streak! Keep shipping.
+          <p className="text-sm text-indigo-400 flex items-center gap-2">
+            <Flame className="w-4 h-4 text-indigo-400 flex-shrink-0" strokeWidth={2} />
+            {streak}-day streak! Keep shipping.
           </p>
         ) : (
           <p className="text-sm text-slate-400">

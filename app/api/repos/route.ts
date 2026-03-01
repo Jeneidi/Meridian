@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createGitHubClient, getRepoReadme, getRepoFileTree, getRepoIssues } from "@/lib/github/client";
+import { getUserPlan, PLAN_LIMITS } from "@/lib/plan-gate";
+
+export const runtime = "nodejs";
 
 // GET /api/repos - List user's connected repos
 export async function GET(req: NextRequest) {
@@ -50,12 +53,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const userId = session.user.id as string;
     const { githubRepoId, name, fullName, url, defaultBranch } = await req.json();
 
     if (!githubRepoId || !name || !fullName || !url) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
+      );
+    }
+
+    // Enforce plan-based repo limit
+    const plan = await getUserPlan(userId);
+    const limit = PLAN_LIMITS[plan].repos;
+    const count = await prisma.repo.count({ where: { userId } });
+    if (count >= limit) {
+      return NextResponse.json(
+        {
+          error: `Your plan allows up to ${limit} repo(s)`,
+          upgrade: true,
+        },
+        { status: 403 }
       );
     }
 
@@ -74,7 +92,7 @@ export async function POST(req: NextRequest) {
     // Create repo record
     const repo = await prisma.repo.create({
       data: {
-        userId: session.user.id as string,
+        userId,
         githubRepoId,
         name,
         fullName,

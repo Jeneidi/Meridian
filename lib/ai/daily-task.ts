@@ -89,17 +89,18 @@ export async function selectDailyTask(
   );
 
   // Create DailyTask record
+  const today = new Date(new Date().toDateString());
   await prisma.dailyTask.upsert({
     where: {
       repoId_date: {
         repoId,
-        date: new Date(new Date().toDateString()),
+        date: today,
       },
     },
     create: {
       repoId,
       taskId: selectedTask.id,
-      date: new Date(),
+      date: today,
       reasoning,
     },
     update: {

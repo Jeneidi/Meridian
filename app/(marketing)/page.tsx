@@ -2,16 +2,22 @@ import { Hero } from "@/components/marketing/Hero";
 import { HowItWorks } from "@/components/marketing/HowItWorks";
 import { Differentiators } from "@/components/marketing/Differentiators";
 import { FAQ } from "@/components/marketing/FAQ";
+import { ScrollParallaxSides } from "@/components/marketing/ScrollParallaxSides";
+import { Logo } from "@/components/Logo";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 relative">
+      {/* Left/right product-themed elements that move as you scroll */}
+      <ScrollParallaxSides />
       {/* Navigation */}
       <nav className="border-b border-white/10 bg-white/5 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-8 py-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-white">Meridian</h2>
+          <Link href="/" className="flex items-center gap-2 [&_span]:text-2xl">
+            <Logo size={28} withWordmark />
+          </Link>
           <div className="flex items-center gap-6">
             <a
               href="#how-it-works"
@@ -22,10 +28,8 @@ export default function HomePage() {
             <Link href="/pricing" className="text-slate-400 hover:text-white transition text-sm">
               Pricing
             </Link>
-            <Link href="/login">
-              <Button className="bg-indigo-600 hover:bg-indigo-700">
-                Start Free
-              </Button>
+            <Link href="/login" className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors inline-flex items-center justify-center">
+              Start Free
             </Link>
           </div>
         </div>
@@ -35,16 +39,22 @@ export default function HomePage() {
       <Hero />
 
       {/* How It Works */}
-      <HowItWorks />
+      <section className="relative z-0">
+        <HowItWorks />
+      </section>
 
       {/* Differentiators */}
-      <Differentiators />
+      <section className="relative z-0">
+        <Differentiators />
+      </section>
 
       {/* FAQ */}
-      <FAQ />
+      <section className="relative z-0">
+        <FAQ />
+      </section>
 
       {/* Final CTA */}
-      <section className="py-20 px-4 bg-gradient-to-b from-slate-900 to-slate-950">
+      <section className="relative z-0 py-20 px-4 bg-gradient-to-b from-slate-900 to-slate-950">
         <div className="max-w-3xl mx-auto text-center space-y-8">
           <h2 className="text-4xl md:text-5xl font-bold text-white">
             Ready to ship?
@@ -52,10 +62,8 @@ export default function HomePage() {
           <p className="text-lg text-slate-300">
             Join builders who are shipping projects with accountability and momentum.
           </p>
-          <Link href="/login">
-            <Button className="bg-gradient-to-r from-indigo-600 to-emerald-600 hover:from-indigo-700 hover:to-emerald-700 text-white text-lg px-8 py-6 rounded-lg font-semibold">
-              Start Free with GitHub →
-            </Button>
+          <Link href="/login" className="bg-gradient-to-r from-indigo-600 to-emerald-600 hover:from-indigo-700 hover:to-emerald-700 text-white text-lg px-8 py-6 rounded-lg font-semibold transition-colors inline-flex items-center justify-center">
+            Start Free with GitHub →
           </Link>
         </div>
       </section>
@@ -65,7 +73,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
-              <h3 className="font-bold text-white mb-4">Meridian</h3>
+              <Logo size={24} withWordmark className="mb-4" />
               <p className="text-sm text-slate-500">
                 Ship your projects with accountability.
               </p>

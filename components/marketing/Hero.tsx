@@ -2,61 +2,107 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import { Check } from "lucide-react";
 
 export function Hero() {
+  const easeOutExpo = [0.16, 1, 0.3, 1] as const;
+  const containerVariants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+  };
+
+  const fromBelow = {
+    hidden: { opacity: 0, y: 28 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: easeOutExpo } },
+  };
+
+  const fromBelowLarge = {
+    hidden: { opacity: 0, y: 24 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: easeOutExpo } },
+  };
+
+  const fadeUp = {
+    hidden: { opacity: 0, y: 16 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: easeOutExpo } },
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4">
-      <div className="max-w-5xl mx-auto text-center space-y-8">
+    <div className="min-h-screen bg-[#09090b] flex items-center justify-center px-4 relative overflow-hidden before:absolute before:inset-0 before:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(99,102,241,0.15),transparent)]">
+      <motion.div
+        className="max-w-5xl mx-auto text-center space-y-8 relative z-10"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
         {/* Tagline */}
-        <div className="space-y-3">
-          <p className="text-indigo-400 font-semibold text-sm uppercase tracking-widest">
-            The Shipping Coach for Builders
-          </p>
-          <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight">
+        <motion.div className="space-y-3" variants={containerVariants}>
+          <motion.p
+            className="text-indigo-400 text-xs font-medium flex items-center gap-2 justify-center"
+            variants={fromBelow}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 inline-block" />
+            The Shipping Coach for Teams
+          </motion.p>
+          <motion.h1
+            className="text-6xl md:text-8xl font-bold text-white leading-tight tracking-tighter"
+            variants={fromBelowLarge}
+          >
             Stop planning.<br />
-            <span className="bg-gradient-to-r from-indigo-400 via-emerald-400 to-indigo-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-indigo-400 to-indigo-300 bg-clip-text text-transparent animate-gradient">
               Start shipping.
             </span>
-          </h1>
-        </div>
+          </motion.h1>
+        </motion.div>
 
         {/* Subheading */}
-        <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
-          Connect your GitHub repo. Let AI break it into 30-minute tasks. Ship with
-          daily accountability and diff-aware coaching.
-        </p>
+        <motion.p
+          className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed"
+          variants={fadeUp}
+        >
+          Connect your GitHub repos. Claude analyzes them. Your team ships with shared accountability—every single day.
+        </motion.p>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+        <motion.div className="flex flex-col sm:flex-row gap-4 justify-center pt-4" variants={fadeUp}>
           <Link href="/login">
-            <Button className="bg-gradient-to-r from-indigo-600 to-emerald-600 hover:from-indigo-700 hover:to-emerald-700 text-white text-lg px-8 py-6 rounded-lg font-semibold transition">
-              Start Free with GitHub →
-            </Button>
+            <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
+              <Button className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-900/40 text-white text-lg px-8 py-6 rounded-lg font-semibold">
+                Start Free with GitHub →
+              </Button>
+            </motion.div>
           </Link>
-          <a
+          <motion.a
             href="#how-it-works"
-            className="px-8 py-6 rounded-lg border border-white/20 text-white font-semibold hover:bg-white/5 transition"
+            className="px-8 py-6 rounded-lg border border-zinc-700 text-white font-semibold hover:bg-zinc-900"
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.98 }}
           >
             Learn How It Works
-          </a>
-        </div>
+          </motion.a>
+        </motion.div>
 
         {/* Trust Indicators */}
-        <div className="pt-8 flex flex-col sm:flex-row gap-8 justify-center text-slate-400 text-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-emerald-400">✓</span>
+        <motion.div
+          className="pt-8 flex flex-col sm:flex-row gap-8 justify-center text-zinc-500 text-sm"
+          initial="hidden"
+          animate="visible"
+          variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.06, delayChildren: 0.35 } } }}
+        >
+          <motion.div className="flex items-center gap-2" variants={fromBelow}>
+            <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" strokeWidth={2.5} />
             No credit card required
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-emerald-400">✓</span>
-            Free GitHub OAuth login
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-emerald-400">✓</span>
-            AI-powered roadmaps
-          </div>
-        </div>
-      </div>
+          </motion.div>
+          <motion.div className="flex items-center gap-2" variants={fromBelow}>
+            <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" strokeWidth={2.5} />
+            AI-powered roadmaps included
+          </motion.div>
+          <motion.div className="flex items-center gap-2" variants={fromBelow}>
+            <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" strokeWidth={2.5} />
+            Works with GitHub OAuth
+          </motion.div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

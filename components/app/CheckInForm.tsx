@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CoachingResponse } from "./CoachingResponse";
 
@@ -110,8 +111,9 @@ export function CheckInForm({ taskId, repoId, taskTitle }: CheckInFormProps) {
       <Button
         type="submit"
         disabled={!summary.trim() || loading}
-        className="w-full bg-gradient-to-r from-indigo-600 to-emerald-600 hover:from-indigo-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition"
+        className="w-full bg-gradient-to-r from-indigo-600 to-emerald-600 hover:from-indigo-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition flex items-center justify-center gap-2"
       >
+        {loading && <Loader2 className="w-4 h-4 animate-spin" />}
         {loading ? "Getting coaching..." : "Get Coaching →"}
       </Button>
     </form>

@@ -1,6 +1,9 @@
-import { auth, signOut } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import Link from "next/link";
+import { LayoutDashboard, CreditCard, FileText, Zap, Bell, UserPlus } from "lucide-react";
+import { Logo } from "@/components/Logo";
+import { SidebarNotificationBadge } from "@/components/app/SidebarNotificationBadge";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 
 export default async function AppLayout({
   children,
@@ -8,55 +11,120 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
+  let userPlan = "FREE";
+  let displayName = "My Account";
 
-  if (!session) {
-    redirect("/login");
+  if (session?.user?.id) {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id as string },
+      select: { plan: true, name: true },
+    });
+    if (user) {
+      userPlan = user.plan;
+      if (user.name) {
+        displayName = user.name;
+      }
+    }
   }
 
+  const planDisplay = {
+    FREE: { label: "Free", showUpgrade: true },
+    PRO: { label: "Pro", showUpgrade: false },
+    PREMIUM: { label: "Premium", showUpgrade: false },
+  };
+
+  const plan = planDisplay[userPlan as keyof typeof planDisplay];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <aside className="fixed left-0 top-0 h-screen w-64 border-r border-white/10 bg-white/5 backdrop-blur-sm">
-        <div className="p-6">
-          <Link href="/">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-emerald-400 bg-clip-text text-transparent">
-              Meridian
-            </h1>
+    <div className="min-h-screen bg-[#09090b]">
+      <aside className="fixed left-0 top-0 h-screen w-64 border-r border-zinc-800 bg-[#09090b]">
+        {/* Header */}
+        <div className="border-b border-zinc-800 h-16 flex items-center px-8">
+          <Link href="/" className="[&_span]:text-2xl">
+            <Logo size={28} withWordmark />
           </Link>
         </div>
 
-        <nav className="mt-8 space-y-2 px-4">
+        {/* Main Navigation */}
+        <nav className="space-y-0 px-4 py-4">
           <Link
             href="/dashboard"
-            className="block px-4 py-2 rounded-lg text-slate-300 hover:bg-white/10 transition"
+            className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-zinc-400 hover:bg-zinc-800 transition"
           >
+            <LayoutDashboard className="h-5 w-5" />
             Dashboard
           </Link>
           <Link
-            href="/settings"
-            className="block px-4 py-2 rounded-lg text-slate-300 hover:bg-white/10 transition"
+            href="/pricing"
+            className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-zinc-400 hover:bg-zinc-800 transition"
           >
-            Settings
+            <CreditCard className="h-5 w-5" />
+            Subscription
+          </Link>
+          <Link
+            href="/terms"
+            className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-zinc-400 hover:bg-zinc-800 transition"
+          >
+            <FileText className="h-5 w-5" />
+            Terms of Service
+          </Link>
+          <Link
+            href="/invites"
+            className="relative flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-zinc-400 hover:bg-zinc-800 transition"
+          >
+            <Bell className="h-5 w-5" />
+            Invites
+            <SidebarNotificationBadge />
+          </Link>
+          <Link
+            href="/contributors"
+            className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-zinc-400 hover:bg-zinc-800 transition"
+          >
+            <UserPlus className="h-5 w-5" />
+            Add Contributors
           </Link>
         </nav>
 
-        <div className="absolute bottom-6 left-4 right-4">
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/" });
-            }}
-          >
-            <button
-              type="submit"
-              className="w-full px-4 py-2 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 transition"
+        {/* Bottom Account Section */}
+        <div className="absolute bottom-6 left-4 right-4 space-y-3">
+          {plan.showUpgrade && (
+            <Link
+              href="/pricing"
+              className="flex items-center justify-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white p-3 transition font-medium text-sm w-full"
             >
-              Sign Out
-            </button>
-          </form>
+              <Zap className="h-4 w-4" />
+              Upgrade Plan
+            </Link>
+          )}
+
+          <Link
+            href="/profile"
+            className="flex items-center justify-between rounded-lg bg-zinc-800/80 hover:bg-zinc-700/80 p-4 transition"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/20 text-indigo-300">
+                <svg
+                  className="h-6 w-6"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
+              </div>
+              <div className="flex flex-col flex-1 min-w-0">
+                <span className="text-sm font-medium text-zinc-200 truncate">
+                  {displayName}
+                </span>
+                <span className="text-xs text-zinc-500">{plan.label} Plan</span>
+              </div>
+            </div>
+          </Link>
         </div>
       </aside>
 
-      <main className="ml-64">{children}</main>
+      <main className="ml-64 flex flex-col">
+        {children}
+      </main>
     </div>
   );
 }

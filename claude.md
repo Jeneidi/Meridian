@@ -187,11 +187,121 @@
 **Status**: ✅ Resolved  
 
 ### Issue 7: Escaped Directory Names in File Creation
-**Error**: Writing to `\(marketing\)` instead of `(marketing)`  
-**Root Cause**: Write tool auto-escaped parentheses, creating wrong directories  
-**Decision**: Use bash `cat >` for files with special characters in path  
-**Files**: `app/(marketing)/page.tsx`, `app/(marketing)/pricing/page.tsx`  
-**Status**: ✅ Resolved  
+**Error**: Writing to `\(marketing\)` instead of `(marketing)`
+**Root Cause**: Write tool auto-escaped parentheses, creating wrong directories
+**Decision**: Use bash `cat >` for files with special characters in path
+**Files**: `app/(marketing)/page.tsx`, `app/(marketing)/pricing/page.tsx`
+**Status**: ✅ Resolved
+
+### Issue 8: GitHub OAuth Authentication Flow Failures (Feb 24, 2026)
+**Error**: "Authentication failed. Please try again" on GitHub OAuth callback
+**Root Cause**: Multiple layers:
+  1. Database URL in `.env.local` was PostgreSQL, but schema used SQLite → Prisma validation error
+  2. Missing NextAuth adapter tables (Account, Session, VerificationToken)
+  3. Email field lacked `@unique` constraint → NextAuth's `getUserByEmail()` failed
+  4. Session callback tried to access `token.accessToken` when token was undefined
+**Solution**:
+  - Switched to SQLite for local dev (DATABASE_URL with `file://` protocol)
+  - Added `@unique` to email field in User model
+  - Reset migrations and ran `prisma migrate dev` to create tables
+  - Fixed session callback to check `if (token?.accessToken)` before accessing
+**Files Changed**: `.env.local`, `prisma/schema.prisma`, `auth.config.ts`
+**Status**: ✅ Resolved → User now logs in successfully
+
+### Issue 9: Repository Fetch Failed When Connecting Repos (Feb 24, 2026)
+**Error**: "Failed to fetch your repositories" error on `/app/repo/connect` page with "Try again" button
+**Root Cause**: Multiple issues in token retrieval:
+  1. NextAuth v5 with PrismaAdapter uses database session strategy, not JWT → `token` parameter is `undefined` in session callback
+  2. Session callback was trying to access `token.accessToken` directly, but token was undefined in DB session strategy
+  3. GitHub access token was stored in Account model by NextAuth but not being retrieved in `/api/repos/search` API route
+  4. Missing diagnostic logging made it unclear where the failure was occurring
+**Solution**:
+  - Changed session callback signature from `session({ session, token })` to `session({ session, user })`
+  - Added logic to fetch access_token from Account model: `prisma.account.findFirst({ where: { userId: user.id, provider: "github" } })`
+  - Attached token to session object: `(session as any).accessToken = account.access_token`
+  - Added comprehensive diagnostic logging (emoji markers) to `/api/repos/search` to identify failure points
+  - Confirmed access token is now properly retrieved and passed to Octokit GitHub client
+**Files Changed**: `auth.config.ts`, `app/api/repos/search/route.ts`
+**Status**: ✅ Resolved → Access token now properly retrieved from Account model, repository list fetches successfully
+
+### Issue 10: Roadmap Generation JSON Parsing & Prisma Type Errors (Feb 24-25, 2026)
+**Error 1**: "Failed to parse roadmap from Claude: Invalid JSON response" (when JSON wrapped in markdown)
+**Error 2**: `Argument 'files': Invalid value provided. Expected String, provided (String, String, String)` (Prisma type mismatch)
+**Root Cause**:
+  1. Claude returns `files` and `microSteps` as arrays `["file1", "file2"]` but Prisma schema stores as JSON strings
+  2. No conversion from array to JSON string before saving to database
+  3. Excessive API token usage: 20 cents per call (2-3x normal rate due to sending 2000 char README + 30 files + 10 issues)
+  4. JSON sometimes wrapped in markdown code blocks by Claude
+**Symptoms**:
+  - User sees "Argument 'files': Invalid value provided" Prisma validation error
+  - Roadmap generation appears successful (Claude responds) but fails on database save
+  - Cost: 20 cents per attempt (too expensive for free tier)
+**Solution**:
+  - Fixed type conversion in `app/api/repos/[id]/roadmap/route.ts`:
+    * Convert arrays to JSON strings before saving: `JSON.stringify(Array.isArray(task.files) ? task.files : [])`
+    * Applies to both `files` and `microSteps` fields
+  - Optimized prompt context in `lib/ai/roadmap.ts` to reduce costs:
+    * README trimmed from 2000 to 1200 chars (~40% reduction)
+    * File tree reduced from 30 to 15 files (~50% reduction in file list)
+    * Issues reduced from 10 to 5 (~50% reduction)
+  - Added markdown code block extraction (handles Claude wrapping JSON in `` ```json ... ``` ``)
+**Expected Cost Improvement**:
+  - Before: ~20 cents per call (8000+ tokens)
+  - After: ~3-5 cents per call (estimated 2500-3000 tokens)
+  - Still comprehensive roadmap quality (top 15 files + 5 issues is sufficient)
+**Files Changed**: `app/api/repos/[id]/roadmap/route.ts`, `lib/ai/roadmap.ts`
+**Status**: ✅ Resolved → Type conversion fixed, cost optimized, roadmap generates successfully
+
+### Issue 11: Task Detail Page JSON Parsing Error (Feb 25, 2026)
+**Error**: `task.microSteps.map is not a function` on task detail page
+**Root Cause**:
+  - `files` and `microSteps` are stored as JSON strings in the database (per Issue 10 fix)
+  - Task detail page component tried calling `.map()` on strings instead of arrays
+  - Downstream rendering component expected arrays but received strings from Prisma
+**Symptoms**:
+  - Roadmap generates successfully (tasks saved to database)
+  - Clicking on a task to view details throws runtime error
+  - `.map()` fails because strings don't have `.map()` method
+**Solution**:
+  - Added JSON parsing logic in task detail page after fetching from database:
+    ```typescript
+    const microSteps = typeof task.microSteps === "string"
+      ? JSON.parse(task.microSteps)
+      : task.microSteps;
+    const files = typeof task.files === "string"
+      ? JSON.parse(task.files)
+      : task.files;
+    ```
+  - Added safety checks before rendering: `Array.isArray(microSteps) && microSteps.length > 0`
+  - Prevents errors if JSON parsing fails or arrays are empty
+**Files Changed**: `app/(app)/repo/[id]/task/[taskId]/page.tsx`
+**Status**: ✅ Resolved → Task detail page now correctly parses and displays arrays
+
+### Enhancement 1: Clickable Task List (Feb 25, 2026)
+**Feature**: Direct task navigation from roadmap list
+**What Changed**:
+  - Converted task list items from non-clickable `<div>` to clickable `<Link>` components
+  - Each task now links to `/repo/[id]/task/[taskId]` for direct access
+  - Added hover effects: border color change to indigo, text highlight
+  - Improved UX: users can click any part of task card to view details
+**Visual Changes**:
+  - Hover: `hover:bg-white/10 hover:border-indigo-500/50`
+  - Task title highlights on hover: `group-hover:text-indigo-400`
+  - Subtitle highlights on hover: `group-hover:text-slate-300`
+  - Added cursor pointer for clear affordance
+**Files Changed**: `app/(app)/repo/[id]/page.tsx`
+**Status**: ✅ Complete → Users can now click any task to navigate to detail page
+
+### Enhancement 2: Lottie + Motion Polish (Feb 26, 2026)
+**Feature**: Replace weak animations with LottieFiles-style motion
+**What Changed**:
+  - **Hero**: Replaced custom SVG FloatingShip with a Lottie animation from LottieFiles CDN (free JSON). Parallax (y + opacity) on scroll retained.
+  - **Lottie**: Added `@lottiefiles/dotlottie-react` and `components/marketing/LottiePlayer.tsx` to load Lottie JSON URLs.
+  - **Framer Motion**: Smoother easing (`easeOutExpo` [0.16, 1, 0.3, 1]), refined stagger/delays, and softer spring (stiffness 260, damping 20) in Hero, HowItWorks, Differentiators. Gradient text animation uses `cubic-bezier(0.4, 0, 0.2, 1)`.
+  - **Types**: Fixed Framer `Variants` typing by using `as const` for ease arrays and `type: "spring" as const` where needed (repo page, AnimatedRepoGrid, TaskDetailContent, HowItWorks, Differentiators).
+  - **Stripe**: Updated `lib/stripe.ts` apiVersion to `2026-01-28.clover` to satisfy current Stripe SDK types (build was failing).
+**Files Changed**: `components/marketing/FloatingShip.tsx`, `components/marketing/LottiePlayer.tsx` (new), `components/marketing/Hero.tsx`, `components/marketing/HowItWorks.tsx`, `components/marketing/Differentiators.tsx`, `app/globals.css`, `app/(app)/repo/[id]/page.tsx`, `components/app/AnimatedRepoGrid.tsx`, `components/app/TaskDetailContent.tsx`, `lib/stripe.ts`
+**Status**: ✅ Complete → Hero uses Lottie; page motion feels more polished and LottieFiles-inspired
 
 ---
 
@@ -331,10 +441,26 @@ Users (id, githubId, email, name, avatar, plan, createdAt)
 
 ---
 
+## Critical Rules for Claude Code
+
+**IMPORTANT**: Whenever you fix an error or bug:
+1. ✅ Fix the code
+2. ✅ **IMMEDIATELY update this claude.md file with the issue + solution**
+3. Add entry to "Known Issues & Decisions" section with:
+   - **Error**: What the user saw
+   - **Root Cause**: Why it happened
+   - **Solution**: What was changed
+   - **Files Changed**: List of modified files
+   - **Status**: ✅ Resolved
+
+**Do NOT skip the claude.md update.** This is the engineering log. It helps you (future Claude) and the user understand what problems have been solved.
+
+---
+
 ## Sign-Off
 
-**v1 Ship Date**: February 24, 2026  
-**Total Build**: 10 milestones, ~500 commits, ~5000 lines of code  
+**v1 Ship Date**: February 24, 2026
+**Total Build**: 10 milestones, ~500 commits, ~5000 lines of code
 **Status**: ✅ Ready for production deployment
 
 Stop planning. Start shipping. 🚀

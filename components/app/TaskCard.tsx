@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatEstimate } from "@/lib/format";
 
 interface TaskCardProps {
   id: string;
@@ -34,7 +35,7 @@ export function TaskCard({ id, title, estimate, difficulty, priority, status, re
             {title}
           </h3>
           <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full whitespace-nowrap">
-            {estimate}m
+            {formatEstimate(estimate)}
           </span>
         </div>
 

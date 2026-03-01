@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
 
 interface PricingCardProps {
   name: string;
@@ -46,7 +47,7 @@ export function PricingCard({
       <ul className="space-y-3">
         {features.map((feature, i) => (
           <li key={i} className="flex gap-3 text-slate-300 text-sm">
-            <span className="text-emerald-400 font-bold flex-shrink-0">✓</span>
+            <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" strokeWidth={2.5} />
             <span>{feature}</span>
           </li>
         ))}

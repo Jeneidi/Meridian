@@ -1,23 +1,32 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/Logo";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { useRouter } from "next/navigation";
+import { Suspense, useEffect } from "react";
 
 function LoginContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
+  const { data: session } = useSession();
+  const router = useRouter();
+
+  // If already logged in and no error, redirect to dashboard
+  useEffect(() => {
+    if (session?.user && !error) {
+      router.push("/dashboard");
+    }
+  }, [session, error, router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="rounded-lg backdrop-blur-md bg-white/5 border border-white/10 p-8 shadow-xl">
           {/* Logo / Brand */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-400 to-emerald-400 bg-clip-text text-transparent mb-2">
-              Meridian
-            </h1>
+          <div className="text-center mb-8 flex flex-col items-center">
+            <Logo size={48} withWordmark className="mb-2 [&_span]:text-3xl" />
             <p className="text-slate-300 text-lg">Stop planning. Start shipping.</p>
           </div>
 
@@ -28,6 +37,15 @@ function LoginContent() {
                 {error === "AccessDenied"
                   ? "GitHub authorization was denied."
                   : "Authentication failed. Please try again."}
+              </p>
+            </div>
+          )}
+
+          {/* Already Logged In Message */}
+          {session?.user && (
+            <div className="mb-6 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+              <p className="text-emerald-300 text-sm">
+                Signed in as <span className="font-semibold">{session.user.email}</span>
               </p>
             </div>
           )}
@@ -50,6 +68,16 @@ function LoginContent() {
             </svg>
             Sign in with GitHub
           </button>
+
+          {/* Sign Out Button if Already Logged In */}
+          {session?.user && (
+            <button
+              onClick={() => signOut({ redirectTo: "/" })}
+              className="w-full mt-3 px-6 py-3 rounded-lg border border-slate-600 text-slate-300 font-semibold hover:bg-slate-800/50 transition-colors"
+            >
+              Sign Out & Try Different Account
+            </button>
+          )}
 
           {/* Footer */}
           <p className="mt-6 text-center text-slate-400 text-sm">

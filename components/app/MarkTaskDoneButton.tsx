@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface MarkTaskDoneButtonProps {
@@ -54,9 +55,10 @@ export function MarkTaskDoneButton({
         <Button
           onClick={handleMarkDone}
           disabled={loading}
-          className="w-full bg-emerald-600 hover:bg-emerald-700 text-lg py-6"
+          className="w-full bg-emerald-600 hover:bg-emerald-700 text-lg py-6 flex items-center justify-center gap-2"
         >
-          {loading ? "Saving..." : "✓ Try Again"}
+          {loading && <Loader2 className="w-5 h-5 animate-spin" />}
+          {loading ? "Saving..." : <><Check className="w-5 h-5" strokeWidth={2.5} /> Try Again</>}
         </Button>
       </div>
     );
@@ -66,9 +68,10 @@ export function MarkTaskDoneButton({
     <Button
       onClick={handleMarkDone}
       disabled={loading}
-      className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-lg py-6 font-semibold transition"
+      className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-lg py-6 font-semibold transition flex items-center justify-center gap-2"
     >
-      {loading ? "Saving..." : "✓ Mark Done"}
+      {loading && <Loader2 className="w-5 h-5 animate-spin" />}
+      {loading ? "Saving..." : <><Check className="w-5 h-5" strokeWidth={2.5} /> Mark Done</>}
     </Button>
   );
 }

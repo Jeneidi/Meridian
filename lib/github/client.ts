@@ -182,3 +182,105 @@ export async function getCommitDiff(
     return null;
   }
 }
+
+// Fetch all source file contents recursively (for deep security audit)
+// Uses GitHub's Git Trees API for efficiency (single call returns all paths)
+export async function getRepoAllFiles(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  branch: string = "main"
+): Promise<Array<{ path: string; content: string }>> {
+  try {
+    // Get the full recursive tree for the repo
+    const { data: refData } = await octokit.git.getRef({
+      owner,
+      repo,
+      ref: `heads/${branch}`,
+    });
+
+    const { data: treeData } = await octokit.git.getTree({
+      owner,
+      repo,
+      tree_sha: refData.object.sha,
+      recursive: "1",
+    });
+
+    // Filter to source files only
+    const sourceExtensions = [
+      ".ts",
+      ".tsx",
+      ".js",
+      ".jsx",
+      ".py",
+      ".go",
+      ".rb",
+      ".rs",
+      ".java",
+      ".php",
+      ".vue",
+      ".svelte",
+      ".css",
+      ".sql",
+    ];
+
+    const excludePatterns = [
+      "node_modules/",
+      ".next/",
+      "dist/",
+      "build/",
+      "out/",
+      /.min\.js$/,
+      /\.lock$/,
+      /\.map$/,
+      /pnpm-lock/,
+      /package-lock/,
+    ];
+
+    const sourceFiles = treeData.tree
+      .filter((item: any) => {
+        if (item.type !== "blob") return false;
+
+        // Check extension
+        const hasSourceExt = sourceExtensions.some((ext) => item.path.endsWith(ext));
+        if (!hasSourceExt) return false;
+
+        // Check exclusions
+        const isExcluded = excludePatterns.some((pattern) => {
+          if (pattern instanceof RegExp) {
+            return pattern.test(item.path);
+          }
+          return item.path.includes(pattern);
+        });
+        return !isExcluded;
+      })
+      .slice(0, 50); // Limit to top 50 files to control token count
+
+    // Fetch content for each file
+    const files: Array<{ path: string; content: string }> = [];
+
+    for (const file of sourceFiles) {
+      try {
+        const { data } = await octokit.repos.getContent({
+          owner,
+          repo,
+          path: file.path,
+        });
+
+        if ("content" in data && typeof data.content === "string") {
+          const content = Buffer.from(data.content, "base64").toString("utf-8");
+          files.push({ path: file.path, content });
+        }
+      } catch (error) {
+        // Skip files that can't be fetched
+        console.warn(`Could not fetch ${file.path}:`, error);
+        continue;
+      }
+    }
+
+    return files;
+  } catch (error) {
+    console.error("Failed to fetch repo files:", error);
+    return [];
+  }
+}

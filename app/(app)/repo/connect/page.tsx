@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { auth } from "@/lib/auth";
 import { useRouter } from "next/navigation";
+import { PageHeader } from "@/components/app/PageHeader";
 import { Button } from "@/components/ui/button";
+import { Pin } from "lucide-react";
 
 interface GitHubRepo {
   id: number;
@@ -82,17 +83,13 @@ export default function ConnectRepoPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <header className="border-b border-white/10 bg-white/5 backdrop-blur-sm sticky top-0">
-        <div className="px-8 py-6">
-          <h1 className="text-3xl font-bold text-white">Connect a Repository</h1>
-          <p className="text-slate-400 mt-2">
-            Select a GitHub repository to generate your shipping roadmap
-          </p>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#09090b]">
+      <PageHeader title="Connect a Repository" backHref="/dashboard" />
 
-      <main className="max-w-4xl mx-auto px-8 py-12">
+      <main className="max-w-7xl mx-auto px-8 py-12">
+        <p className="text-slate-400 mb-8">
+          Select a GitHub repository to generate your shipping roadmap
+        </p>
         {error && (
           <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20">
             <p className="text-red-300">{error}</p>
@@ -155,7 +152,7 @@ export default function ConnectRepoPage() {
                   <p className="text-sm text-slate-300">{repo.description}</p>
                 )}
                 <div className="mt-3 flex gap-4 text-xs text-slate-400">
-                  <span>📌 {repo.default_branch}</span>
+                  <span className="flex items-center gap-1.5"><Pin className="w-4 h-4 text-indigo-400 flex-shrink-0" strokeWidth={2} />{repo.default_branch}</span>
                   <a
                     href={repo.html_url}
                     target="_blank"

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { formatEstimate } from "@/lib/format";
+import { PartyPopper, Clock, BarChart3 } from "lucide-react";
 
 interface DailyTaskWidgetProps {
   repoId: string;
@@ -20,8 +22,9 @@ export function DailyTaskWidget({
   if (!taskId) {
     return (
       <div className="rounded-lg backdrop-blur-md bg-white/5 border border-white/10 p-8 text-center">
-        <p className="text-slate-400">
-          All tasks completed! 🎉 Generate a new roadmap or connect another repo.
+        <p className="text-slate-400 flex items-center justify-center gap-2">
+          <PartyPopper className="w-5 h-5 text-emerald-400 flex-shrink-0" strokeWidth={2} />
+          All tasks completed! Generate a new roadmap or connect another repo.
         </p>
       </div>
     );
@@ -48,22 +51,20 @@ export function DailyTaskWidget({
       <div className="flex gap-4 mb-6 text-sm">
         {estimate && (
           <div className="flex items-center gap-2">
-            <span className="text-slate-400">⏱</span>
-            <span className="text-white font-semibold">{estimate} min</span>
+            <Clock className="w-4 h-4 text-indigo-400 flex-shrink-0" strokeWidth={2} />
+            <span className="text-white font-semibold">{formatEstimate(estimate)}</span>
           </div>
         )}
         {difficulty && (
           <div className="flex items-center gap-2">
-            <span className="text-slate-400">📊</span>
+            <BarChart3 className="w-4 h-4 text-indigo-400 flex-shrink-0" strokeWidth={2} />
             <span className="text-white">Level {difficulty}/5</span>
           </div>
         )}
       </div>
 
-      <Link href={`/repo/${repoId}/task/${taskId}`}>
-        <button className="w-full px-6 py-3 rounded-lg bg-gradient-to-r from-indigo-600 to-emerald-600 text-white font-semibold hover:from-indigo-700 hover:to-emerald-700 transition">
-          Start Task →
-        </button>
+      <Link href={`/repo/${repoId}/task/${taskId}`} className="w-full px-6 py-3 rounded-lg bg-gradient-to-r from-indigo-600 to-emerald-600 text-white font-semibold hover:from-indigo-700 hover:to-emerald-700 transition inline-flex items-center justify-center">
+        Start Task →
       </Link>
     </div>
   );
