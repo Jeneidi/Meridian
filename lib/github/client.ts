@@ -210,6 +210,56 @@ export async function getPackageJson(
   }
 }
 
+// Fetch all file paths recursively (for accurate roadmap analysis)
+// Uses GitHub's Git Trees API (recursive, single call returns all paths)
+// Returns just the paths (not file contents) for efficient context
+export async function getRepoFilePaths(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  branch: string = "main"
+): Promise<string[]> {
+  try {
+    // Get the full recursive tree for the repo
+    const { data: refData } = await octokit.git.getRef({
+      owner,
+      repo,
+      ref: `heads/${branch}`,
+    });
+
+    const { data: treeData } = await octokit.git.getTree({
+      owner,
+      repo,
+      tree_sha: refData.object.sha,
+      recursive: "1",
+    });
+
+    const excludePatterns = [
+      "node_modules/",
+      ".next/",
+      "dist/",
+      "build/",
+      "out/",
+      ".git/",
+      "coverage/",
+    ];
+
+    // Return file paths only, filtered to exclude build/cache dirs
+    return treeData.tree
+      .filter((item: any) => {
+        if (item.type !== "blob") return false; // files only, not dirs
+        return !excludePatterns.some((p) => item.path?.includes(p));
+      })
+      .map((item: any) => item.path as string)
+      .slice(0, 150); // ~150 paths is ~600 tokens — reasonable context budget
+  } catch (error) {
+    console.error("Failed to fetch file paths:", error);
+    // Fallback to root-level listing if git ref fails (e.g., main vs master)
+    const rootItems = await getRepoFileTree(octokit, owner, repo);
+    return rootItems.map((f) => f.path);
+  }
+}
+
 // Fetch all source file contents recursively (for deep security audit)
 // Uses GitHub's Git Trees API for efficiency (single call returns all paths)
 export async function getRepoAllFiles(

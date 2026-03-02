@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Zap, Loader2 } from "lucide-react";
+import { Zap, Loader2, Crown } from "lucide-react";
 
 export function RateLimitTestPanel() {
   const [roadmapLoading, setRoadmapLoading] = useState(false);
   const [auditLoading, setAuditLoading] = useState(false);
+  const [tierLoading, setTierLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const handleAddRoadmap = async () => {
@@ -68,6 +69,36 @@ export function RateLimitTestPanel() {
     }
   };
 
+  const handleUpgradeTier = async () => {
+    setTierLoading(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch("/api/dev/upgrade-tier", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to upgrade tier");
+      }
+
+      const data = await response.json();
+      setMessage({
+        type: "success",
+        text: `✓ Upgraded to ${data.currentPlan}. Refresh to see changes.`,
+      });
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : "An error occurred",
+      });
+    } finally {
+      setTierLoading(false);
+    }
+  };
+
   return (
     <div className="rounded-lg bg-slate-900/50 border border-slate-700 p-6 mb-8">
       <h3 className="text-sm font-semibold text-slate-300 mb-4 flex items-center gap-2">
@@ -108,6 +139,24 @@ export function RateLimitTestPanel() {
             <>
               <Zap className="w-4 h-4" />
               +1 Security Audit
+            </>
+          )}
+        </button>
+
+        <button
+          onClick={handleUpgradeTier}
+          disabled={tierLoading}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition"
+        >
+          {tierLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Upgrading...
+            </>
+          ) : (
+            <>
+              <Crown className="w-4 h-4" />
+              Upgrade to PRO
             </>
           )}
         </button>

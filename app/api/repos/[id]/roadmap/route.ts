@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import {
   createGitHubClient,
   getRepoReadme,
-  getRepoFileTree,
+  getRepoFilePaths,
   getRepoIssues,
   getPackageJson,
 } from "@/lib/github/client";
@@ -95,7 +95,7 @@ export async function POST(
 
     const [readme, fileTree, issues, packageJson] = await Promise.all([
       getRepoReadme(octokit, owner, repoName),
-      getRepoFileTree(octokit, owner, repoName),
+      getRepoFilePaths(octokit, owner, repoName),
       getRepoIssues(octokit, owner, repoName),
       getPackageJson(octokit, owner, repoName),
     ]);
