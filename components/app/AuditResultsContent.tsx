@@ -15,10 +15,30 @@ interface ScanResult {
   totalIssuesFound: number;
 }
 
+interface AIReportFinding {
+  category: string;
+  description: string;
+  severity: "low" | "medium" | "high" | "critical";
+  file?: string;
+  line?: string;
+  recommendation: string;
+}
+
+interface AIReport {
+  projectType: string;
+  projectContext: string;
+  categoriesAudited: string[];
+  categoriesSkipped: Array<{ name: string; reason: string }>;
+  summary: string;
+  riskLevel: "low" | "medium" | "high" | "critical";
+  findings: AIReportFinding[];
+  recommendations: string[];
+}
+
 interface AuditData {
   tier: "free" | "pro" | "premium";
   scanResult: ScanResult;
-  aiReport: string | null;
+  aiReport: AIReport | null;
   upgrade?: {
     message: string;
     url: string;
@@ -222,22 +242,123 @@ export function AuditResultsContent({ repoId }: AuditResultsContentProps) {
             </div>
           </div>
         </div>
+      ) : data.aiReport ? (
+        <div className="space-y-8">
+          {/* Project Context */}
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-4">Project Context</h2>
+            <div className="rounded-lg backdrop-blur-md bg-white/5 border border-white/10 p-6">
+              <p className="text-sm font-semibold text-slate-400 mb-2 uppercase">Project Type</p>
+              <p className="text-lg font-bold text-white mb-4 capitalize">{data.aiReport.projectType.replace("-", " ")}</p>
+              <p className="text-slate-300">{data.aiReport.projectContext}</p>
+            </div>
+          </div>
+
+          {/* Risk Summary */}
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-4">Security Summary</h2>
+            <div className={`rounded-lg backdrop-blur-md border p-6 ${
+              data.aiReport.riskLevel === "critical" ? "bg-red-500/10 border-red-500/30" :
+              data.aiReport.riskLevel === "high" ? "bg-orange-500/10 border-orange-500/30" :
+              data.aiReport.riskLevel === "medium" ? "bg-yellow-500/10 border-yellow-500/30" :
+              "bg-emerald-500/10 border-emerald-500/30"
+            }`}>
+              <p className="text-sm font-semibold text-slate-400 mb-2 uppercase">Overall Risk Level</p>
+              <p className={`text-2xl font-bold mb-4 capitalize ${
+                data.aiReport.riskLevel === "critical" ? "text-red-300" :
+                data.aiReport.riskLevel === "high" ? "text-orange-300" :
+                data.aiReport.riskLevel === "medium" ? "text-yellow-300" :
+                "text-emerald-300"
+              }`}>{data.aiReport.riskLevel}</p>
+              <p className="text-slate-300">{data.aiReport.summary}</p>
+            </div>
+          </div>
+
+          {/* Audit Scope */}
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-4">Audit Scope</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="rounded-lg backdrop-blur-md bg-emerald-500/10 border border-emerald-500/30 p-4">
+                <p className="text-xs font-semibold text-emerald-400 mb-3 uppercase">Audit Coverage</p>
+                <div className="flex flex-wrap gap-2">
+                  {data.aiReport.categoriesAudited.map((cat) => (
+                    <span key={cat} className="px-2 py-1 rounded text-xs bg-emerald-500/30 text-emerald-200">
+                      ✓ {cat}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              {data.aiReport.categoriesSkipped.length > 0 && (
+                <div className="rounded-lg backdrop-blur-md bg-slate-700/10 border border-slate-500/30 p-4">
+                  <p className="text-xs font-semibold text-slate-400 mb-3 uppercase">Not Audited</p>
+                  <div className="space-y-1">
+                    {data.aiReport.categoriesSkipped.map((skip) => (
+                      <div key={skip.name} className="text-xs text-slate-400">
+                        <span className="font-semibold">○ {skip.name}</span>
+                        <p className="text-slate-500 ml-4">{skip.reason}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Detailed Findings */}
+          {data.aiReport.findings.length > 0 && (
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-4">Detailed Findings ({data.aiReport.findings.length})</h2>
+              <div className="space-y-4">
+                {data.aiReport.findings.map((finding, idx) => (
+                  <div
+                    key={idx}
+                    className={`rounded-lg border p-6 ${getSeverityColor(finding.severity)}`}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h4 className="text-lg font-semibold mb-1">{finding.category}</h4>
+                        <p className="text-sm opacity-90">{finding.description}</p>
+                      </div>
+                      <span className="text-xs font-medium px-3 py-1 rounded bg-white/10 ml-4 whitespace-nowrap">
+                        {finding.severity}
+                      </span>
+                    </div>
+                    {(finding.file || finding.line) && (
+                      <div className="text-sm text-slate-300 mb-3 font-mono">
+                        {finding.file && <span>{finding.file}</span>}
+                        {finding.line && <span> : {finding.line}</span>}
+                      </div>
+                    )}
+                    <div className="border-t border-white/10 pt-3">
+                      <p className="text-sm font-semibold mb-1 text-slate-300">Recommendation:</p>
+                      <p className="text-sm text-slate-200">{finding.recommendation}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recommendations */}
+          {data.aiReport.recommendations.length > 0 && (
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-4">High-Level Recommendations</h2>
+              <div className="rounded-lg backdrop-blur-md bg-white/5 border border-white/10 p-6">
+                <ul className="space-y-2">
+                  {data.aiReport.recommendations.map((rec, idx) => (
+                    <li key={idx} className="flex gap-3 text-slate-300">
+                      <span className="text-indigo-400 flex-shrink-0">→</span>
+                      <span>{rec}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
       ) : (
         <div>
-          <h2 className="text-2xl font-bold text-white mb-4">Deep Code Analysis (Claude AI)</h2>
-          <p className="text-slate-400 mb-6">
-            Advanced analysis of your source code for security patterns and vulnerabilities.
-          </p>
-
-          <div className="rounded-lg backdrop-blur-md bg-white/5 border border-white/10 p-8 prose prose-invert max-w-none">
-            {data.aiReport ? (
-              <div className="text-slate-200 whitespace-pre-wrap leading-relaxed">
-                {data.aiReport}
-              </div>
-            ) : (
-              <p className="text-slate-400">No AI report available.</p>
-            )}
-          </div>
+          <p className="text-slate-400">No AI report available.</p>
         </div>
       )}
 

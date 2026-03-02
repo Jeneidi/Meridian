@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { TodaysTaskSection } from "@/components/app/TodaysTaskSection";
 import { AnimatedRepoGrid } from "@/components/app/AnimatedRepoGrid";
+import { RateLimitTestPanel } from "@/components/app/RateLimitTestPanel";
 import Link from "next/link";
 import { PageHeader } from "@/components/app/PageHeader";
 import { Suspense } from "react";
@@ -71,6 +72,7 @@ export default async function DashboardPage() {
 
       <main className="max-w-7xl mx-auto px-8 py-12">
         <p className="text-zinc-500 mb-8">Welcome, {session.user.name}</p>
+        <RateLimitTestPanel />
         {repos.length === 0 ? (
           <div className="rounded-lg bg-zinc-900 border border-zinc-800 p-12 text-center">
             <h2 className="text-2xl font-semibold text-white mb-3">No Repos Yet</h2>

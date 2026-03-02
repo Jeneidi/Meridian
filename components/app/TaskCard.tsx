@@ -9,6 +9,8 @@ interface TaskCardProps {
   priority: number;
   status: "TODO" | "IN_PROGRESS" | "DONE" | "SKIPPED";
   repoId: string;
+  isOptional?: boolean;
+  category?: string;
 }
 
 const difficultyColors = {
@@ -26,14 +28,17 @@ const statusBadges = {
   SKIPPED: "bg-slate-500/20 text-slate-300 line-through",
 };
 
-export function TaskCard({ id, title, estimate, difficulty, priority, status, repoId }: TaskCardProps) {
+export function TaskCard({ id, title, estimate, difficulty, priority, status, repoId, isOptional, category }: TaskCardProps) {
   return (
     <Link href={`/repo/${repoId}/task/${id}`}>
       <div className="rounded-lg backdrop-blur-md bg-white/5 border border-white/10 p-6 hover:bg-white/10 hover:border-white/20 transition cursor-pointer group">
         <div className="flex items-start justify-between mb-3">
-          <h3 className="text-lg font-semibold text-white group-hover:text-indigo-300 transition flex-1 pr-3">
-            {title}
-          </h3>
+          <div className="flex items-center gap-2 flex-1 min-w-0 pr-3">
+            {category === "bug" && <span className="text-lg flex-shrink-0">🐛</span>}
+            <h3 className="text-lg font-semibold text-white group-hover:text-indigo-300 transition truncate">
+              {title}
+            </h3>
+          </div>
           <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full whitespace-nowrap">
             {formatEstimate(estimate)}
           </span>
@@ -48,13 +53,18 @@ export function TaskCard({ id, title, estimate, difficulty, priority, status, re
         </div>
 
         <div className="flex items-center justify-between gap-3">
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <span className={`text-xs font-semibold px-2 py-1 rounded ${difficultyColors[difficulty]}`}>
               Level {difficulty}
             </span>
             <span className={`text-xs font-semibold px-2 py-1 rounded ${statusBadges[status]}`}>
               {status === "DONE" ? "Done" : status === "IN_PROGRESS" ? "In Progress" : "To Do"}
             </span>
+            {isOptional && (
+              <span className="text-xs font-semibold px-2 py-1 rounded bg-amber-500/20 text-amber-300">
+                Optional
+              </span>
+            )}
           </div>
           <span className="text-xs text-slate-400">Priority {priority}/10</span>
         </div>

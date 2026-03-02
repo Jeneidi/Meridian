@@ -97,6 +97,8 @@ model Task {
   status        TaskStatus  @default(TODO)
   files         String      @default("[]") // JSON array of file paths
   microSteps    String      @default("[]") // JSON array of 3-5 steps
+  isOptional    Boolean     @default(false) // true = enhancement, false = core
+  category      String      @default("feature") // "feature" | "bug" | "improvement"
   createdAt     DateTime    @default(now())
   completedAt   DateTime?
   history       TaskHistory[]

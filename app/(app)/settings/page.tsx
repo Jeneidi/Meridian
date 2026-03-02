@@ -138,7 +138,7 @@ export default async function SettingsPage({
                   </div>
                   <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
                     <p className="text-slate-300 text-sm">
-                      <span className="font-semibold">2</span> roadmaps/month
+                      <span className="font-semibold">1</span> roadmap/month
                     </p>
                   </div>
                   <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">

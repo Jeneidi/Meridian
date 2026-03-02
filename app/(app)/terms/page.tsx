@@ -1,13 +1,24 @@
+"use client";
+
 import { PageHeader } from "@/components/app/PageHeader";
+import { useMemo } from "react";
 
 export default function TermsPage() {
+  const lastUpdatedDate = useMemo(() => {
+    return new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#09090b]">
       <PageHeader title="Terms of Service" />
 
       {/* Content */}
       <main className="max-w-7xl mx-auto px-8 py-12">
-        <p className="text-slate-400 text-sm mb-8">Last updated: February 25, 2026</p>
+        <p className="text-slate-400 text-sm mb-8">Last updated: {lastUpdatedDate}</p>
         <div className="space-y-10 text-slate-300">
         {/* Section 1 */}
         <section className="space-y-4">

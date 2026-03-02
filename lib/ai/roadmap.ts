@@ -10,6 +10,8 @@ export interface GeneratedTask {
   priority: number; // 1-10
   files: string[];
   microSteps: string[];
+  isOptional: boolean; // true = enhancement/optimization, false = core/bug fix
+  category: "feature" | "bug" | "improvement"; // task type
 }
 
 export interface RoadmapMetadata {
@@ -29,6 +31,7 @@ export interface RoadmapGenerationInput {
   readme: string | null;
   fileTree: Array<{ name: string; type: string; path: string }> | string[];
   issues: Array<{ title: string; body: string | null; labels: string[] }>;
+  packageJson: string | null; // package.json content for dependency analysis
 }
 
 export async function generateRoadmap(
@@ -39,7 +42,7 @@ export async function generateRoadmap(
   try {
     console.log("🚀 Roadmap generation started for:", input.repoName);
 
-    const message = await client.messages.create({
+    const apiResponse = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 4096,
       messages: [
@@ -70,6 +73,31 @@ RULES:
    - DevOps/infrastructure: automation, monitoring, logging, security hardening, disaster recovery
 7. REASONING: For each task (or lack of tasks), explain your thinking based on: project maturity, what exists vs what's missing, user expectations for this project type
 
+8. OPTIONAL vs REQUIRED tasks:
+   - REQUIRED (isOptional: false): bugs, broken features, missing core functionality that blocks users
+   - OPTIONAL (isOptional: true): auth, payment integration, analytics, CI/CD, SEO, performance — valuable but not blocking
+   - If a web app clearly has no auth: suggest "Add authentication" as OPTIONAL (not required)
+   - If a repo has payment-like features in README but no payment library in package.json: suggest as OPTIONAL
+
+9. DEPLOYMENT CONTEXT — if the project is a web app/SaaS/API that will go online:
+   - Check for missing: auth system, session handling, payment integration, rate limiting, CORS, environment config
+   - Suggest each as OPTIONAL tasks (they're important but not core)
+   - Examples: no 'next-auth' / 'passport' / 'auth0' → suggest auth; no 'stripe' / 'paddle' → suggest payments
+   - DO NOT suggest these for CLI tools, libraries, local scripts, or data science repos
+
+10. BUG DETECTION — surface from multiple signals:
+    - GitHub issues with "bug" label → create tasks with category: "bug"
+    - README mentions "known issue", "TODO", "FIXME", "broken", "not working" → flag as bug tasks
+    - package.json has conflicting/outdated major dependencies → flag as improvement task
+    - NEVER fabricate bugs — only report what evidence supports
+
+11. MISSING FEATURE DETECTION from package.json:
+    - Has 'express'/'fastify' but no 'helmet' → missing security headers (suggest as optional)
+    - Has React/Next but no 'react-query'/'swr' → may need data fetching strategy
+    - Has database ORM but no migration tooling → suggest migrations setup
+    - Has auth but no 'rate-limiter' → suggest rate limiting (optional)
+    - Base suggestions on what's actually in package.json, not assumptions
+
 TASK STRUCTURE:
 - title: Clear, action-oriented (verb first)
 - description: 1-2 sentences, acceptance criteria
@@ -78,6 +106,8 @@ TASK STRUCTURE:
 - priority: 1-10 (higher = more important for shipping)
 - files: Array of file paths likely to be touched
 - microSteps: 3-5 concrete sub-steps
+- isOptional: true if task is an enhancement/optimization, false if it fixes something broken or missing core functionality
+- category: "bug" for known issues/fixes, "feature" for new additions, "improvement" for optimizations/enhancements
 
 PROJECT ANALYSIS STRUCTURE (return as metadata object):
 - projectType: Classify as "library" | "fullstack-app" | "cli-tool" | "component-library" | "api" | "other"
@@ -95,10 +125,10 @@ OPTIONAL MESSAGE:
     });
 
     console.log("📡 Claude API response received");
-    console.log("   Usage: input_tokens=", message.usage.input_tokens, ", output_tokens=", message.usage.output_tokens);
+    console.log("   Usage: input_tokens=", apiResponse.usage.input_tokens, ", output_tokens=", apiResponse.usage.output_tokens);
 
     // Extract the JSON from the response
-    const content = message.content[0];
+    const content = apiResponse.content[0];
     if (content.type !== "text") {
       throw new Error("Unexpected response type from Claude");
     }
@@ -158,9 +188,11 @@ OPTIONAL MESSAGE:
           !task.difficulty ||
           task.priority === undefined ||
           !Array.isArray(task.files) ||
-          !Array.isArray(task.microSteps)
+          !Array.isArray(task.microSteps) ||
+          task.isOptional === undefined ||
+          !task.category
         ) {
-          throw new Error(`Task ${index} is missing required fields`);
+          throw new Error(`Task ${index} is missing required fields (title, description, estimate, difficulty, priority, files, microSteps, isOptional, category)`);
         }
       });
     }
@@ -196,7 +228,7 @@ function buildRoadmapPrompt(input: RoadmapGenerationInput): string {
 
   const issuesStr = input.issues
     .slice(0, 5) // Reduced from 10 to 5 (most critical issues)
-    .map((issue) => `  - ${issue.title}`)
+    .map((issue) => `  - ${issue.title}${issue.body ? ` — ${issue.body.slice(0, 100)}` : ""}`)
     .join("\n");
 
   return `Repository: ${input.repoName}
@@ -206,6 +238,9 @@ ${input.readme ? input.readme.slice(0, 1200) : "(No README found)"}
 
 File Tree (top 15 files):
 ${fileTreeStr}
+
+Dependencies (package.json):
+${input.packageJson ? input.packageJson.slice(0, 1000) : "(No package.json — not a Node.js project)"}
 
 Open Issues (first 5):
 ${issuesStr || "(No open issues)"}
@@ -237,7 +272,9 @@ Return ONLY a JSON object with this structure (nothing else):
       "difficulty": 1-5,
       "priority": 1-10,
       "files": [...],
-      "microSteps": [...]
+      "microSteps": [...],
+      "isOptional": false,
+      "category": "feature"
     }
   ],
   "message": "Only include when tasks is empty (0 tasks). Explain why the project looks good.",

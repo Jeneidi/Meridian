@@ -20,7 +20,7 @@ export function FAQ() {
     {
       question: "Can I use this for team projects?",
       answer:
-        "v1 is designed for individual builders. Pro plan (v2) will include team collaboration features and shared roadmaps.",
+        "Yes! Free tier users can invite collaborators to their single repo. Pro and Premium users get full team collaboration across multiple repos with shared roadmaps, accountability tracking, and team dashboards.",
     },
     {
       question: "What if a task estimate is wrong?",

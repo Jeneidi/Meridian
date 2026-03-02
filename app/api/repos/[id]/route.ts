@@ -51,6 +51,8 @@ export async function GET(
         difficulty: task.difficulty,
         priority: task.priority,
         status: task.status,
+        isOptional: task.isOptional,
+        category: task.category,
       })),
     });
   } catch (error) {

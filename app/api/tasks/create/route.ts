@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { repoId, title, description, estimate, difficulty, priority, isCustom } = await req.json();
+    const { repoId, title, description, estimate, difficulty, priority, isOptional, category, isCustom } = await req.json();
 
     // Validate required fields
     if (!repoId || !title || !description) {
@@ -41,6 +41,8 @@ export async function POST(req: NextRequest) {
         priority: priority || 5,
         files: "[]",
         microSteps: JSON.stringify(["Complete the task"]),
+        isOptional: isOptional ?? false,
+        category: category ?? "feature",
       },
     });
 

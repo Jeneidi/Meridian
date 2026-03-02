@@ -82,15 +82,15 @@ export const RATE_LIMITS = {
   // Plan-aware roadmap limits
   ROADMAP_FREE: {
     windowMs: 30 * 24 * 60 * 60 * 1000, // 30 days
-    max: 2,
+    max: 1,
   },
   ROADMAP_PRO: {
     windowMs: 24 * 60 * 60 * 1000, // 1 day
-    max: 10,
+    max: 3,
   },
   ROADMAP_PREMIUM: {
     windowMs: 24 * 60 * 60 * 1000, // 1 day
-    max: 50,
+    max: 10,
   },
 
   // Plan-aware checkin limits
@@ -100,21 +100,21 @@ export const RATE_LIMITS = {
   },
   CHECKIN_PRO: {
     windowMs: 24 * 60 * 60 * 1000, // 1 day
-    max: 10,
+    max: 5,
   },
   CHECKIN_PREMIUM: {
     windowMs: 24 * 60 * 60 * 1000, // 1 day
-    max: 30,
+    max: 10,
   },
 
   // Security audit limits
   AUDIT_PRO: {
     windowMs: 24 * 60 * 60 * 1000, // 1 day
-    max: 3,
+    max: 1,
   },
   AUDIT_PREMIUM: {
     windowMs: 24 * 60 * 60 * 1000, // 1 day
-    max: 10,
+    max: 5,
   },
   // FREE has no audit constant — deep audit is hard-blocked for FREE
 
@@ -129,3 +129,11 @@ export const RATE_LIMITS = {
     max: 5,
   },
 };
+
+/**
+ * DEV ONLY: Reset a rate limit entry to allow retesting
+ * Used for development and testing purposes only
+ */
+export function resetRateLimit(key: string): void {
+  delete store[key];
+}

@@ -16,6 +16,8 @@ export function AddCustomTaskDialog({ repoId, onTaskAdded }: AddCustomTaskDialog
   const [estimate, setEstimate] = useState<30 | 60>(30);
   const [difficulty, setDifficulty] = useState(2);
   const [priority, setPriority] = useState(5);
+  const [isOptional, setIsOptional] = useState(false);
+  const [category, setCategory] = useState<"feature" | "bug" | "improvement">("feature");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,6 +37,8 @@ export function AddCustomTaskDialog({ repoId, onTaskAdded }: AddCustomTaskDialog
           estimate,
           difficulty,
           priority,
+          isOptional,
+          category,
           isCustom: true,
         }),
       });
@@ -49,6 +53,8 @@ export function AddCustomTaskDialog({ repoId, onTaskAdded }: AddCustomTaskDialog
       setEstimate(30);
       setDifficulty(2);
       setPriority(5);
+      setIsOptional(false);
+      setCategory("feature");
       setOpen(false);
       onTaskAdded?.();
     } catch (err) {
@@ -161,6 +167,35 @@ export function AddCustomTaskDialog({ repoId, onTaskAdded }: AddCustomTaskDialog
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className="space-y-3 border-t border-white/10 pt-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase">
+                Category
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value as "feature" | "bug" | "improvement")}
+                className="w-full px-3 py-2 rounded bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="feature">Feature</option>
+                <option value="bug">Bug Fix</option>
+                <option value="improvement">Improvement</option>
+              </select>
+            </div>
+
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isOptional}
+                onChange={(e) => setIsOptional(e.target.checked)}
+                className="w-4 h-4 rounded bg-white/5 border border-white/10 text-indigo-600 focus:ring-2 focus:ring-indigo-500"
+              />
+              <span className="text-sm text-slate-300">
+                This is an optional enhancement (not critical for shipping)
+              </span>
+            </label>
           </div>
 
           {error && (

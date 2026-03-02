@@ -6,6 +6,7 @@ import {
   getRepoReadme,
   getRepoFileTree,
   getRepoIssues,
+  getPackageJson,
 } from "@/lib/github/client";
 import {
   generateRoadmapWithRetry,
@@ -44,9 +45,9 @@ export async function POST(
 
     if (!rateLimit.success) {
       const limits: Record<string, number> = {
-        FREE: 2,
-        PRO: 10,
-        PREMIUM: 50,
+        FREE: 1,
+        PRO: 3,
+        PREMIUM: 10,
       };
       const limit = limits[plan];
       const window = plan === "FREE" ? "per month" : "per day";
@@ -92,10 +93,11 @@ export async function POST(
     const octokit = createGitHubClient(accessToken);
     const [owner, repoName] = repo.fullName.split("/");
 
-    const [readme, fileTree, issues] = await Promise.all([
+    const [readme, fileTree, issues, packageJson] = await Promise.all([
       getRepoReadme(octokit, owner, repoName),
       getRepoFileTree(octokit, owner, repoName),
       getRepoIssues(octokit, owner, repoName),
+      getPackageJson(octokit, owner, repoName),
     ]);
 
     // Generate roadmap using Claude
@@ -108,6 +110,7 @@ export async function POST(
       readme,
       fileTree,
       issues,
+      packageJson,
     });
     console.log("✅ Roadmap generation succeeded, tasks:", tasks.length);
     console.log("📊 Project analysis - Type:", metadata.projectType, "| Complexity:", metadata.complexity);
@@ -135,6 +138,8 @@ export async function POST(
             priority: task.priority,
             files: JSON.stringify(Array.isArray(task.files) ? task.files : []),
             microSteps: JSON.stringify(Array.isArray(task.microSteps) ? task.microSteps : []),
+            isOptional: task.isOptional ?? false,
+            category: task.category ?? "feature",
           },
         })
       )
@@ -162,6 +167,8 @@ export async function POST(
           estimate: task.estimate,
           difficulty: task.difficulty,
           priority: task.priority,
+          isOptional: task.isOptional,
+          category: task.category,
         })),
       },
       { status: 201 }

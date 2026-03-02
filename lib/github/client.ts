@@ -183,6 +183,33 @@ export async function getCommitDiff(
   }
 }
 
+// Fetch package.json content for dependency analysis
+export async function getPackageJson(
+  octokit: Octokit,
+  owner: string,
+  repo: string
+): Promise<string | null> {
+  try {
+    const { data } = await octokit.repos.getContent({
+      owner,
+      repo,
+      path: "package.json",
+    });
+
+    if ("content" in data && typeof data.content === "string") {
+      return Buffer.from(data.content, "base64").toString("utf-8");
+    }
+    return null;
+  } catch (error) {
+    // 404 is expected for non-Node.js projects
+    if (error instanceof Error && error.message.includes("404")) {
+      return null;
+    }
+    console.error("Failed to fetch package.json:", error);
+    return null;
+  }
+}
+
 // Fetch all source file contents recursively (for deep security audit)
 // Uses GitHub's Git Trees API for efficiency (single call returns all paths)
 export async function getRepoAllFiles(

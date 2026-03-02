@@ -7,6 +7,7 @@ import {
   getRepoFileTree,
   getRepoIssues,
   getRepoAllFiles,
+  getPackageJson,
 } from "@/lib/github/client";
 import { runSecurityScan } from "@/lib/security-scan";
 import { generateSecurityAudit } from "@/lib/ai/security-audit";
@@ -50,10 +51,11 @@ export async function POST(
     const [owner, repoName] = repo.fullName.split("/");
 
     // Fetch repo metadata in parallel
-    const [readme, fileTree, issues] = await Promise.all([
+    const [readme, fileTree, issues, packageJson] = await Promise.all([
       getRepoReadme(octokit, owner, repoName),
       getRepoFileTree(octokit, owner, repoName),
       getRepoIssues(octokit, owner, repoName),
+      getPackageJson(octokit, owner, repoName),
     ]);
 
     // Concatenate all text content for grep scan
@@ -89,6 +91,8 @@ export async function POST(
       repoName: repo.name,
       files: allFiles,
       grepFindings: scanResult.issues,
+      readme,
+      packageJson,
     });
 
     return NextResponse.json({

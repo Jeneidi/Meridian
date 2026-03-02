@@ -26,6 +26,8 @@ interface Task {
   estimate: 30 | 60;
   difficulty: 1 | 2 | 3 | 4 | 5;
   priority: number;
+  isOptional: boolean;
+  category: string;
 }
 
 export default function RepoDetailPage() {
@@ -210,36 +212,84 @@ export default function RepoDetailPage() {
               <h2 className="text-2xl font-bold text-white">Tasks</h2>
               <AddCustomTaskDialog repoId={repoId} onTaskAdded={fetchRepo} />
             </div>
-            <motion.div
-              className="grid gap-4"
-              initial="hidden"
-              animate="visible"
-              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }}
-            >
-              {tasks.map((task) => (
+
+            {/* Required Tasks */}
+            {tasks.filter(t => !t.isOptional).length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-white mb-4">Tasks</h3>
                 <motion.div
-                  key={task.id}
-                  variants={fadeUp}
-                  whileHover={{ y: -2 }}
+                  className="grid gap-4"
+                  initial="hidden"
+                  animate="visible"
+                  variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }}
                 >
-                  <Link
-                    href={`/repo/${repoId}/task/${task.id}`}
-                    className="border-b border-zinc-800 py-3.5 px-4 hover:bg-zinc-900/60 flex items-center justify-between group cursor-pointer transition"
-                  >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <h3 className="text-sm font-medium text-white group-hover:text-indigo-400 transition truncate">
-                        {task.title}
-                      </h3>
-                    </div>
-                    <div className="flex items-center gap-4 ml-4 flex-shrink-0">
-                      <span className="text-xs text-zinc-500 font-mono whitespace-nowrap">
-                        {formatEstimate(task.estimate)}
-                      </span>
-                    </div>
-                  </Link>
+                  {tasks.filter(t => !t.isOptional).map((task) => (
+                    <motion.div
+                      key={task.id}
+                      variants={fadeUp}
+                      whileHover={{ y: -2 }}
+                    >
+                      <Link
+                        href={`/repo/${repoId}/task/${task.id}`}
+                        className="border-b border-zinc-800 py-3.5 px-4 hover:bg-zinc-900/60 flex items-center justify-between group cursor-pointer transition"
+                      >
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          {task.category === "bug" && <span className="text-lg">🐛</span>}
+                          <h3 className="text-sm font-medium text-white group-hover:text-indigo-400 transition truncate">
+                            {task.title}
+                          </h3>
+                        </div>
+                        <div className="flex items-center gap-4 ml-4 flex-shrink-0">
+                          <span className="text-xs text-zinc-500 font-mono whitespace-nowrap">
+                            {formatEstimate(task.estimate)}
+                          </span>
+                        </div>
+                      </Link>
+                    </motion.div>
+                  ))}
                 </motion.div>
-              ))}
-            </motion.div>
+              </div>
+            )}
+
+            {/* Optional Enhancements */}
+            {tasks.filter(t => t.isOptional).length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-zinc-400 mb-4 flex items-center gap-2">
+                  💡 Optional Enhancements
+                </h3>
+                <motion.div
+                  className="grid gap-4"
+                  initial="hidden"
+                  animate="visible"
+                  variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }}
+                >
+                  {tasks.filter(t => t.isOptional).map((task) => (
+                    <motion.div
+                      key={task.id}
+                      variants={fadeUp}
+                      whileHover={{ y: -2 }}
+                    >
+                      <Link
+                        href={`/repo/${repoId}/task/${task.id}`}
+                        className="border-b border-zinc-800/50 py-3.5 px-4 hover:bg-zinc-900/40 flex items-center justify-between group cursor-pointer transition opacity-75"
+                      >
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          {task.category === "bug" && <span className="text-lg">🐛</span>}
+                          <h3 className="text-sm font-medium text-zinc-300 group-hover:text-indigo-400 transition truncate">
+                            {task.title}
+                          </h3>
+                        </div>
+                        <div className="flex items-center gap-4 ml-4 flex-shrink-0">
+                          <span className="text-xs text-zinc-600 font-mono whitespace-nowrap">
+                            {formatEstimate(task.estimate)}
+                          </span>
+                        </div>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </div>
+            )}
           </div>
         )}
       </main>

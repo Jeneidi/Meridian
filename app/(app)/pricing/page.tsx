@@ -170,7 +170,7 @@ export default function PricingPage() {
                 <div className="flex items-start">
                   <Check className="w-4 h-4 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
                   <span className="text-zinc-300 text-sm">
-                    2 project analyses per month
+                    1 project analysis per month
                   </span>
                 </div>
                 <div className="flex items-start">
@@ -234,7 +234,7 @@ export default function PricingPage() {
                 <div className="text-5xl font-bold text-white">$7.99</div>
                 <div className="text-zinc-400 text-sm mt-1">/user/month</div>
                 <div className="text-zinc-500 text-xs mt-3 leading-relaxed">
-                  Ideal for teams of <span className="text-emerald-400 font-semibold">1–5 people</span>
+                  Ideal for teams of <span className="text-emerald-400 font-semibold">3–5 people</span>
                   <br />
                   <span className="text-zinc-600">(Add or remove users anytime)</span>
                 </div>
@@ -255,11 +255,11 @@ export default function PricingPage() {
                 </div>
                 <div className="flex items-start">
                   <Check className="w-4 h-4 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-zinc-300 text-sm">3-5 connected repos</span>
+                  <span className="text-zinc-300 text-sm">5 connected repos</span>
                 </div>
                 <div className="flex items-start">
                   <Check className="w-4 h-4 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-zinc-300 text-sm">5 project analyses/day</span>
+                  <span className="text-zinc-300 text-sm">3 project analyses/day</span>
                 </div>
                 <div className="flex items-start">
                   <Check className="w-4 h-4 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
@@ -275,15 +275,11 @@ export default function PricingPage() {
                 </div>
                 <div className="flex items-start">
                   <Check className="w-4 h-4 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-zinc-300 text-sm">Team dashboard (accountability)</span>
+                  <span className="text-zinc-300 text-sm">Team dashboard</span>
                 </div>
                 <div className="flex items-start">
                   <Check className="w-4 h-4 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
                   <span className="text-zinc-300 text-sm">Team streak tracking</span>
-                </div>
-                <div className="flex items-start">
-                  <Check className="w-4 h-4 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-zinc-300 text-sm">Priority support (email)</span>
                 </div>
               </div>
             </motion.div>
@@ -349,35 +345,11 @@ export default function PricingPage() {
                 </div>
                 <div className="flex items-start">
                   <Check className="w-4 h-4 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-zinc-300 text-sm">2 deep AI security audits/day</span>
-                </div>
-                <div className="flex items-start">
-                  <Check className="w-4 h-4 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-zinc-300 text-sm">Advanced analytics & reporting</span>
-                </div>
-                <div className="flex items-start">
-                  <Check className="w-4 h-4 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-zinc-300 text-sm">Custom workflow automation</span>
-                </div>
-                <div className="flex items-start">
-                  <Check className="w-4 h-4 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-zinc-300 text-sm">AI-powered team summaries</span>
+                  <span className="text-zinc-300 text-sm">5 deep AI security audits/day</span>
                 </div>
                 <div className="flex items-start">
                   <Check className="w-4 h-4 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
                   <span className="text-zinc-300 text-sm">First access to new features</span>
-                </div>
-                <div className="flex items-start">
-                  <Check className="w-4 h-4 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-zinc-300 text-sm">Dedicated Slack support</span>
-                </div>
-                <div className="flex items-start">
-                  <Check className="w-4 h-4 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-zinc-300 text-sm">Webhook management (advanced)</span>
-                </div>
-                <div className="flex items-start">
-                  <Check className="w-4 h-4 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-zinc-300 text-sm">SSO ready (coming soon)</span>
                 </div>
               </div>
             </motion.div>
