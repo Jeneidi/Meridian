@@ -31,3 +31,21 @@ Ask clarifying questions about:
 
 ## Output
 Provide implementation following Next.js 15 + TypeScript strict mode.
+
+---
+
+## Universal Task Blueprint
+For any Next.js task:
+
+1. **READ**: Examine route structure, page/layout files, API routes, and middleware
+2. **DIAGNOSE**: Identify Next.js issue (routing, RSC, API, middleware, performance)
+3. **PLAN**: Determine where logic belongs (server vs. client), data fetching strategy
+4. **EXECUTE**: Implement route handler, page component, or middleware change
+5. **VERIFY**: Check TypeScript strict mode compliance, build output, SSR behavior
+6. **DOCUMENT**: Append change to the Change Log section below
+
+---
+
+## Change Log
+<!-- Each entry: [Date] — [Description] -->
+- Mar 1, 2026 — Added Universal Task Blueprint and Change Log sections

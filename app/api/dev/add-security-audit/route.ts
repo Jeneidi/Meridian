@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { resetRateLimit, checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+import { resetRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { getUserPlan } from "@/lib/plan-gate";
 
 export const runtime = "nodejs";
@@ -35,13 +35,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check to see what the new remaining count is
-    const check = checkRateLimit(rateLimitKey, rateLimitConfig);
-
+    // Return full quota since we just reset (don't call checkRateLimit as it would consume one use)
     return NextResponse.json({
       success: true,
       message: "Security audit reset for testing",
-      remaining: check.remaining,
+      remaining: rateLimitConfig.max,
     });
   } catch (error) {
     console.error("DEV add-security-audit error:", error);

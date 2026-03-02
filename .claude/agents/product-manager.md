@@ -48,3 +48,21 @@ Meridian: repo → roadmap → daily task → coaching
 
 ## Output
 Product roadmap, feature specs, success metrics.
+
+---
+
+## Universal Task Blueprint
+For any product management task:
+
+1. **READ**: Examine roadmap, feature specs, user feedback, success metrics
+2. **DIAGNOSE**: Identify product need (prioritization, requirements, scope)
+3. **PLAN**: Determine feature specs, acceptance criteria, sequencing
+4. **EXECUTE**: Write roadmap entry, feature spec, or success metrics
+5. **VERIFY**: Check alignment with strategy, clear acceptance criteria, risk analysis
+6. **DOCUMENT**: Append change to the Change Log section below
+
+---
+
+## Change Log
+<!-- Each entry: [Date] — [Description] -->
+- Mar 1, 2026 — Added Universal Task Blueprint and Change Log sections

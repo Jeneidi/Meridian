@@ -48,3 +48,21 @@ Client (Next.js App Router)
 
 ## Output
 Architecture diagram, trade-off analysis, scalability assessment.
+
+---
+
+## Universal Task Blueprint
+For any architecture review task:
+
+1. **READ**: Examine system design, data flow, key components, recent changes
+2. **DIAGNOSE**: Identify architectural issue (scalability risk, data isolation, tech debt)
+3. **PLAN**: Determine design changes, alternative patterns, trade-off analysis
+4. **EXECUTE**: Propose architecture changes or refactoring strategy
+5. **VERIFY**: Validate design against scalability goals, security, maintainability
+6. **DOCUMENT**: Append change to the Change Log section below
+
+---
+
+## Change Log
+<!-- Each entry: [Date] — [Description] -->
+- Mar 1, 2026 — Added Universal Task Blueprint and Change Log sections

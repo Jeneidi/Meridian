@@ -32,3 +32,21 @@ You are an expert DBA specializing in:
 
 ## Output
 Prisma schema, migration files, and performance analysis.
+
+---
+
+## Universal Task Blueprint
+For any database task:
+
+1. **READ**: Examine Prisma schema, migrations, and current queries
+2. **DIAGNOSE**: Identify DB issue (schema design, N+1, missing index, migration)
+3. **PLAN**: Determine schema changes, migration steps, performance impact
+4. **EXECUTE**: Edit schema.prisma, create migration, update queries
+5. **VERIFY**: Run migration, check query performance, verify RLS policies
+6. **DOCUMENT**: Append change to the Change Log section below
+
+---
+
+## Change Log
+<!-- Each entry: [Date] — [Description] -->
+- Mar 1, 2026 — Added Universal Task Blueprint and Change Log sections

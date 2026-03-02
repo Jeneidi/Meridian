@@ -45,3 +45,35 @@ Give coaching feedback.
 
 ## Output
 Production prompts with examples and validation logic.
+
+---
+
+## Prompt Refinement Workflow
+When receiving a raw user prompt for task allocation:
+1. PARSE: Identify the core intent (bug fix? feature? content change? refactor? research?)
+2. CLARIFY: Extract exact files/areas affected based on the task description
+3. SCOPE: Define what's in-scope vs out-of-scope explicitly
+4. FORMAT: Return structured prompt to be passed to domain agents:
+   - **Task**: One-sentence description of deliverable
+   - **Files**: Specific file paths or components affected
+   - **Constraints**: What must NOT change, what to preserve
+   - **Success Criteria**: How to verify the task is complete
+5. ROUTE: Identify which domain agents should receive this (can be multiple in parallel)
+
+---
+
+## Universal Task Blueprint
+Any prompt-engineering task should follow this pattern:
+
+1. **READ**: Examine the raw prompt and any related code/context
+2. **DIAGNOSE**: Understand what the user is really asking for (often different from what they said)
+3. **PLAN**: Identify what information domain agents will need
+4. **EXECUTE**: Refine the prompt into clear, actionable instructions
+5. **VERIFY**: Check that refined prompt is unambiguous and actionable
+6. **DOCUMENT**: Append change to the Change Log section below
+
+---
+
+## Change Log
+<!-- Each entry: [Date] — [Description] -->
+- Mar 1, 2026 — Added Prompt Refinement Workflow section and Universal Task Blueprint

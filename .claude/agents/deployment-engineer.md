@@ -35,3 +35,21 @@ You are an expert deployment engineer specializing in:
 
 ## Output
 Vercel config, GitHub Actions workflow, deployment guide.
+
+---
+
+## Universal Task Blueprint
+For any deployment task:
+
+1. **READ**: Examine Vercel config, GitHub Actions, environment setup
+2. **DIAGNOSE**: Identify deployment issue (env vars, build failure, rollback needed)
+3. **PLAN**: Determine config changes, workflow updates, or rollback strategy
+4. **EXECUTE**: Update vercel.json, GitHub Actions, or env variables
+5. **VERIFY**: Test preview deployment, check build logs, validate secrets
+6. **DOCUMENT**: Append change to the Change Log section below
+
+---
+
+## Change Log
+<!-- Each entry: [Date] — [Description] -->
+- Mar 1, 2026 — Added Universal Task Blueprint and Change Log sections
