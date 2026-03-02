@@ -57,7 +57,8 @@ export default function InvitesPage() {
       // Remove from list optimistically
       setInvites((prev) => prev.filter((inv) => inv.id !== inviteId));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      // Error handled silently
+      console.error("Invite action error:", err);
     } finally {
       setActionLoading((prev) => ({ ...prev, [inviteId]: false }));
     }
