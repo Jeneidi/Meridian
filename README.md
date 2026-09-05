@@ -108,7 +108,7 @@ Open http://localhost:3000
 ### Required Environment Variables
 
 ```
-NEXTAUTH_URL=https://meridian.vercel.app
+NEXTAUTH_URL=https://your-deployment.vercel.app
 NEXTAUTH_SECRET=<generate with openssl rand -base64 32>
 GITHUB_CLIENT_ID=<from GitHub OAuth app>
 GITHUB_CLIENT_SECRET=<from GitHub OAuth app>
